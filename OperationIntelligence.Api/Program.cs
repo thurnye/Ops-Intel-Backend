@@ -16,15 +16,47 @@ using OperationIntelligence.Core.Security;
 using OperationIntelligence.Api.Middlewares.Security;
 using StackExchange.Redis;
 using OperationIntelligence.Core.Cache;
+using Microsoft.OpenApi;
+using Microsoft.AspNetCore.Mvc.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 // Swagger
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "OperationIntelligence API",
+        Version = "v1"
+    });
+
+    options.TagActionsBy(api =>
+    {
+        if (api.ActionDescriptor is not ControllerActionDescriptor cad)
+            return new[] { "default" };
+
+        var ns = cad.ControllerTypeInfo.Namespace ?? string.Empty;
+        var marker = ns.Contains(".Controllers.", StringComparison.OrdinalIgnoreCase)
+            ? ".Controllers."
+            : ".Controller.";
+        var index = ns.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+
+        if (index < 0)
+            return new[] { cad.ControllerName.ToLowerInvariant() };
+
+        var group = ns[(index + marker.Length)..]
+            .Split('.', StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault();
+
+        var top = string.IsNullOrWhiteSpace(group) ? "default" : group.ToLowerInvariant();
+        var controller = cad.ControllerName.ToLowerInvariant();
+
+        return new[] { $"{top}/{controller}" };
+    });
+});
 
 // JWT
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -79,6 +111,16 @@ builder.Services.AddScoped<IInventoryStockRepository, InventoryStockRepository>(
 builder.Services.AddScoped<IStockMovementRepository, StockMovementRepository>();
 
 
+// ORDER
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+builder.Services.AddScoped<IOrderStatusHistoryRepository, OrderStatusHistoryRepository>();
+builder.Services.AddScoped<IOrderPaymentRepository, OrderPaymentRepository>();
+builder.Services.AddScoped<IOrderImageRepository, OrderImageRepository>();
+builder.Services.AddScoped<IOrderNoteRepository, OrderNoteRepository>();
+builder.Services.AddScoped<IOrderAddressRepository, OrderAddressRepository>();
+
+
 // =========== End Of  Repositories =================================
 
 // =========== Services =================================
@@ -98,11 +140,19 @@ builder.Services.AddScoped<IProductImageService, ProductImageService>();
 builder.Services.AddScoped<IProductSupplierService, ProductSupplierService>();
 builder.Services.AddScoped<BotDetectionService>();
 
-
+// Order
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IOrderItemService, OrderItemService>();
+builder.Services.AddScoped<IOrderStatusHistoryService, OrderStatusHistoryService>();
+builder.Services.AddScoped<IOrderPaymentService, OrderPaymentService>();
+builder.Services.AddScoped<IOrderImageService, OrderImageService>();
+builder.Services.AddScoped<IOrderNoteService, OrderNoteService>();
+builder.Services.AddScoped<IOrderAddressService, OrderAddressService>();
 
 
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateProductRequestValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateOrderRequestValidator>();
 builder.Services.AddHttpContextAccessor();
 
 
@@ -159,7 +209,10 @@ if (app.Environment.IsDevelopment())
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "OperationIntelligence API v1");
+    });
 }
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();

@@ -1,4 +1,3 @@
-using FluentValidation;
 using OperationIntelligence.DB;
 
 namespace OperationIntelligence.Core;
@@ -6,25 +5,16 @@ namespace OperationIntelligence.Core;
 public class ProductService : IProductService
 {
     private readonly IProductRepository _productRepository;
-    private readonly IValidator<CreateProductRequest> _createValidator;
-    private readonly IValidator<UpdateProductRequest> _updateValidator;
 
-    public ProductService(
-        IProductRepository productRepository,
-        IValidator<CreateProductRequest> createValidator,
-        IValidator<UpdateProductRequest> updateValidator)
+    public ProductService(IProductRepository productRepository)
     {
         _productRepository = productRepository;
-        _createValidator = createValidator;
-        _updateValidator = updateValidator;
     }
 
     public async Task<ProductResponse> CreateAsync(
         CreateProductRequest request,
         CancellationToken cancellationToken = default)
     {
-        await _createValidator.ValidateAndThrowAsync(request, cancellationToken);
-
         var isSkuUnique = await _productRepository.IsSkuUniqueAsync(request.SKU, null, cancellationToken);
         if (!isSkuUnique)
             throw new InvalidOperationException(InventoryErrorMessages.ProductSkuAlreadyExists(request.SKU));
@@ -110,8 +100,6 @@ public class ProductService : IProductService
         UpdateProductRequest request,
         CancellationToken cancellationToken = default)
     {
-        await _updateValidator.ValidateAndThrowAsync(request, cancellationToken);
-
         var existingProduct = await _productRepository.GetByIdAsync(request.Id, cancellationToken);
         if (existingProduct == null)
             return null;

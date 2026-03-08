@@ -1,5 +1,4 @@
 using OperationIntelligence.Api.Models;
-using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -24,6 +23,11 @@ namespace OperationIntelligence.Api.Middlewares
                 var response = new ApiResponse<object>
                 {
                     Data = null,
+                    Meta = new ApiMeta
+                    {
+                        RequestId = context.HttpContext.TraceIdentifier,
+                        Timestamp = DateTime.UtcNow
+                    },
                     Errors = errors
                 };
 

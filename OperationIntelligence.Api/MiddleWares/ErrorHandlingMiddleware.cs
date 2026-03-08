@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
-using OperationIntelligence.Api.Helpers;
 using OperationIntelligence.Api.Models;
+using FluentValidation;
 
 namespace OperationIntelligence.Api.Middlewares
 {
@@ -32,6 +32,16 @@ namespace OperationIntelligence.Api.Middlewares
                 _logger.LogWarning(ex, "Unauthorized");
                 await WriteError(context, HttpStatusCode.Unauthorized, ex.Message, ErrorCode.AUTHORIZATION_ERROR);
             }
+            catch (ValidationException ex)
+            {
+                _logger.LogWarning(ex, "Validation failed");
+                await WriteError(context, HttpStatusCode.BadRequest, ex.Message, ErrorCode.VALIDATION_ERROR);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Business rule violation");
+                await WriteError(context, HttpStatusCode.BadRequest, ex.Message, ErrorCode.CONFLICT_ERROR);
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unhandled Exception");
@@ -44,7 +54,23 @@ namespace OperationIntelligence.Api.Middlewares
             context.Response.StatusCode = (int)status;
             context.Response.ContentType = "application/json";
 
-            var response = ResponseBuilder.Error<object>(message, code);
+            var response = new ApiResponse<object>
+            {
+                Data = null,
+                Meta = new ApiMeta
+                {
+                    RequestId = context.TraceIdentifier,
+                    Timestamp = DateTime.UtcNow
+                },
+                Errors = new List<ApiError>
+                {
+                    new()
+                    {
+                        Code = code,
+                        Message = message
+                    }
+                }
+            };
             await context.Response.WriteAsync(JsonSerializer.Serialize(response));
         }
     }

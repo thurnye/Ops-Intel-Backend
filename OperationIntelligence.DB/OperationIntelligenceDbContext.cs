@@ -13,7 +13,9 @@ namespace OperationIntelligence.DB
         public DbSet<PlatformUser> Users => Set<PlatformUser>();
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
-        // Inventory
+        // =========================
+        // Inventory DbSets
+        // =========================
         public DbSet<Product> Products => Set<Product>();
         public DbSet<ProductImage> ProductImages => Set<ProductImage>();
         public DbSet<Category> Categories => Set<Category>();
@@ -26,46 +28,99 @@ namespace OperationIntelligence.DB
         public DbSet<ProductSupplier> ProductSuppliers => Set<ProductSupplier>();
 
 
+        // =========================
+        // Order DbSets
+        // =========================
+        public DbSet<Order> Orders => Set<Order>();
+        public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+        public DbSet<OrderImage> OrderImages => Set<OrderImage>();
+        public DbSet<OrderAddress> OrderAddresses => Set<OrderAddress>();
+        public DbSet<OrderNote> OrderNotes => Set<OrderNote>();
+        public DbSet<OrderStatusHistory> OrderStatusHistories => Set<OrderStatusHistory>();
+        public DbSet<OrderPayment> OrderPayments => Set<OrderPayment>();
+
+
+
+
+        // protected override void OnModelCreating(ModelBuilder modelBuilder)
+        // {
+        //     // Auth
+        //     modelBuilder.ApplyConfiguration(new PlatformUserConfiguration());
+        //     modelBuilder.ApplyConfiguration(new RefreshTokenConfiguration());
+
+
+        //     // Inventory
+        //     modelBuilder.ApplyConfiguration(new ProductConfiguration());
+        //     modelBuilder.ApplyConfiguration(new ProductImageConfiguration());
+        //     modelBuilder.ApplyConfiguration(new InventoryStockConfiguration());
+        //     modelBuilder.ApplyConfiguration(new StockMovementConfiguration());
+        //     modelBuilder.ApplyConfiguration(new CategoryConfiguration());
+        //     modelBuilder.ApplyConfiguration(new BrandConfiguration());
+        //     modelBuilder.ApplyConfiguration(new UnitOfMeasureConfiguration());
+        //     modelBuilder.ApplyConfiguration(new WarehouseConfiguration());
+        //     modelBuilder.ApplyConfiguration(new SupplierConfiguration());
+        //     modelBuilder.ApplyConfiguration(new ProductSupplierConfiguration());
+
+        //     // Order
+        //     modelBuilder.ApplyConfiguration(new OrderConfiguration());
+        //     modelBuilder.ApplyConfiguration(new OrderImageConfiguration());
+        //     modelBuilder.ApplyConfiguration(new OrderItemConfiguration());
+        //     modelBuilder.ApplyConfiguration(new OrderPaymentConfiguration());
+        //     modelBuilder.ApplyConfiguration(new OrderAddressConfiguration());
+        //     modelBuilder.ApplyConfiguration(new OrderNoteConfiguration());
+        //     modelBuilder.ApplyConfiguration(new OrderStatusHistoryConfiguration());
+
+
+        //     ConfigureGlobalConventions(modelBuilder);
+        // }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
 
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(OperationIntelligenceDbContext).Assembly);
 
-            // modelBuilder.Entity<PlatformUser>(entity =>
-            // {
-            //     entity.ToTable("ApplicationUser");
-            //     entity.HasKey(u => u.Id);
-            //     entity.HasIndex(u => u.Email).IsUnique();
-            // });
+            ConfigureGlobalConventions(modelBuilder);
+        }
 
-            // modelBuilder.Entity<RefreshToken>(entity =>
-            // {
-            //     entity.HasKey(rt => rt.Id);
-            //     entity.Property(rt => rt.Token).IsRequired().HasMaxLength(256);
-            //     entity.HasIndex(rt => rt.Token).IsUnique();
+        private static void ConfigureGlobalConventions(ModelBuilder modelBuilder)
+        {
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.ClrType == typeof(decimal) || property.ClrType == typeof(decimal?))
+                    {
+                        property.SetPrecision(18);
+                        property.SetScale(2);
+                    }
 
-            //     Configure the relationship to PlatformUser
-            //     entity.HasOne(rt => rt.User)
-            //           .WithMany()
-            //           .HasForeignKey(rt => rt.UserId)
-            //           .OnDelete(DeleteBehavior.Cascade);
-            // });
+                    if (property.ClrType == typeof(DateTime))
+                    {
+                        // Optional: enforce datetime2 in SQL Server
+                        property.SetColumnType("datetime2");
+                    }
 
-            // Auth
-            modelBuilder.ApplyConfiguration(new PlatformUserConfiguration());
-            modelBuilder.ApplyConfiguration(new RefreshTokenConfiguration());
-
-
-            // Inventory
-            modelBuilder.ApplyConfiguration(new ProductConfiguration());
-            modelBuilder.ApplyConfiguration(new ProductImageConfiguration());
-            modelBuilder.ApplyConfiguration(new InventoryStockConfiguration());
-            modelBuilder.ApplyConfiguration(new StockMovementConfiguration());
-            modelBuilder.ApplyConfiguration(new CategoryConfiguration());
-            modelBuilder.ApplyConfiguration(new BrandConfiguration());
-            modelBuilder.ApplyConfiguration(new UnitOfMeasureConfiguration());
-            modelBuilder.ApplyConfiguration(new WarehouseConfiguration());
-            modelBuilder.ApplyConfiguration(new SupplierConfiguration());
-            modelBuilder.ApplyConfiguration(new ProductSupplierConfiguration());
+                    if (property.ClrType == typeof(DateTime?))
+                    {
+                        property.SetColumnType("datetime2");
+                    }
+                    
+                    if (property.ClrType == typeof(decimal) || property.ClrType == typeof(decimal?))
+                    {
+                        if (property.Name.Contains("Quantity"))
+                        {
+                            property.SetPrecision(18);
+                            property.SetScale(4);
+                        }
+                        else
+                        {
+                            property.SetPrecision(18);
+                            property.SetScale(2);
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
+using OperationIntelligence.Api.Controllers;
+using OperationIntelligence.Api.Models;
 using OperationIntelligence.Core;
 
 namespace OperationIntelligence.Api.Controllers.Inventory;
 
 [ApiController]
 [Route("api/inventory/products")]
-public class ProductsController : ControllerBase
+public class ProductsController : BaseApiController
 {
     private readonly IProductService _productService;
 
@@ -18,30 +20,30 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateProductRequest request, CancellationToken cancellationToken)
     {
         var result = await _productService.CreateAsync(request, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        return CreatedResponse(nameof(GetById), new { id = result.Id }, result);
     }
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var result = await _productService.GetByIdAsync(id, cancellationToken);
-        return result == null ? NotFound() : Ok(result);
+        return result == null ? ErrorResponse(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Resource not found.") : OkResponse(result);
     }
 
     [HttpGet]
     public async Task<IActionResult> GetPaged([FromQuery] ProductQueryRequest request, CancellationToken cancellationToken)
     {
         var result = await _productService.GetPagedAsync(request, cancellationToken);
-        return Ok(result);
+        return PagedOkResponse(result);
     }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductRequest request, CancellationToken cancellationToken)
     {
         if (id != request.Id)
-            return BadRequest("Route id does not match request id.");
+            return ErrorResponse(StatusCodes.Status400BadRequest, ErrorCode.VALIDATION_ERROR, "Route id does not match request id.");
 
         var result = await _productService.UpdateAsync(request, cancellationToken);
-        return result == null ? NotFound() : Ok(result);
+        return result == null ? ErrorResponse(StatusCodes.Status404NotFound, ErrorCode.NOT_FOUND, "Resource not found.") : OkResponse(result);
     }
 }

@@ -1,4 +1,3 @@
-using FluentValidation;
 using OperationIntelligence.DB;
 
 namespace OperationIntelligence.Core;
@@ -8,29 +7,21 @@ public class InventoryStockService : IInventoryStockService
     private readonly IInventoryStockRepository _inventoryStockRepository;
     private readonly IProductRepository _productRepository;
     private readonly IStockMovementRepository _stockMovementRepository;
-    private readonly IValidator<StockInRequest> _stockInValidator;
-    private readonly IValidator<StockOutRequest> _stockOutValidator;
 
     public InventoryStockService(
         IInventoryStockRepository inventoryStockRepository,
         IProductRepository productRepository,
-        IStockMovementRepository stockMovementRepository,
-        IValidator<StockInRequest> stockInValidator,
-        IValidator<StockOutRequest> stockOutValidator)
+        IStockMovementRepository stockMovementRepository)
     {
         _inventoryStockRepository = inventoryStockRepository;
         _productRepository = productRepository;
         _stockMovementRepository = stockMovementRepository;
-        _stockInValidator = stockInValidator;
-        _stockOutValidator = stockOutValidator;
     }
 
     public async Task<InventoryStockResponse> StockInAsync(
         StockInRequest request,
         CancellationToken cancellationToken = default)
     {
-        await _stockInValidator.ValidateAndThrowAsync(request, cancellationToken);
-
         var product = await _productRepository.GetByIdAsync(request.ProductId, cancellationToken);
         if (product == null)
             throw new InvalidOperationException(InventoryErrorMessages.ProductNotFound);
@@ -96,8 +87,6 @@ public class InventoryStockService : IInventoryStockService
         StockOutRequest request,
         CancellationToken cancellationToken = default)
     {
-        await _stockOutValidator.ValidateAndThrowAsync(request, cancellationToken);
-
         var product = await _productRepository.GetByIdAsync(request.ProductId, cancellationToken);
         if (product == null)
             throw new InvalidOperationException(InventoryErrorMessages.ProductNotFound);
