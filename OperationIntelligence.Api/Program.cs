@@ -20,7 +20,6 @@ using OperationIntelligence.Core.Cache;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -75,21 +74,43 @@ builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 builder.Services.AddScoped<IUnitOfMeasureRepository, UnitOfMeasureRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
+builder.Services.AddScoped<IProductSupplierRepository, ProductSupplierRepository>();
 builder.Services.AddScoped<IInventoryStockRepository, InventoryStockRepository>();
 builder.Services.AddScoped<IStockMovementRepository, StockMovementRepository>();
 
 
 // =========== End Of  Repositories =================================
 
-// Services
+// =========== Services =================================
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+
+// Inventory
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IInventoryStockService, InventoryStockService>();
+builder.Services.AddScoped<IStockMovementService, StockMovementService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IBrandService, BrandService>();
+builder.Services.AddScoped<IUnitOfMeasureService, UnitOfMeasureService>();
+builder.Services.AddScoped<IWarehouseService, WarehouseService>();
+builder.Services.AddScoped<ISupplierService, SupplierService>();
+builder.Services.AddScoped<IProductImageService, ProductImageService>();
+builder.Services.AddScoped<IProductSupplierService, ProductSupplierService>();
 builder.Services.AddScoped<BotDetectionService>();
+
+
+
+
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateProductRequestValidator>();
 builder.Services.AddHttpContextAccessor();
 
 
 //JWT Service
 builder.Services.AddScoped<JwtService>();
+
+// =========== End Of  Repositories =================================
+
 
 // DbContext
 builder.Services.AddDbContext<OperationIntelligenceDbContext>(options =>

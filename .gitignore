@@ -1,7 +1,9 @@
 ## Build Folders
 ./OperationIntelligence.Api/bin
+./OperationIntelligence.Api/bin\Debug
 /OperationIntelligence.Core/bin
 /OperationIntelligence.DB/bin
+/OperationIntelligence.DB/bin\Debug
 /OperationIntelligence.DB/Migrations
 /OperationIntelligence.Tests/bin
 obj/
