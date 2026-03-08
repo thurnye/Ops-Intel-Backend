@@ -7,7 +7,6 @@ using OperationIntelligence.Core.Services;
 using OperationIntelligence.DB;
 using OperationIntelligence.DB.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using FluentValidation;
@@ -52,31 +51,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Core Identity
-builder.Services
-    .AddIdentityCore<ApplicationUser>(options =>
-    {
-        options.Password.RequireDigit = true;
-        options.Password.RequiredLength = 6;
-        options.User.RequireUniqueEmail = true;
-    })
-    .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<DonationDbContext>()
-    .AddDefaultTokenProviders();
-
-
-// Disable cookie-based login paths 
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.LoginPath = "/api/auth/login";
-    options.AccessDeniedPath = "/api/auth/denied";
-    options.Events.OnRedirectToLogin = context =>
-    {
-        context.Response.StatusCode = 401;
-        return Task.CompletedTask;
-    };
-});
-
 // Validation
 builder.Services.AddControllers(options =>
 {
@@ -106,7 +80,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<JwtService>();
 
 // DbContext
-builder.Services.AddDbContext<DonationDbContext>(options =>
+builder.Services.AddDbContext<OperationIntelligenceDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
@@ -139,6 +113,14 @@ builder.Services.AddScoped<CacheInvalidationService>();
 
 
 var app = builder.Build();
+
+// Dev-time schema bootstrap when migrations are not used.
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<OperationIntelligenceDbContext>();
+    db.Database.EnsureCreated();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

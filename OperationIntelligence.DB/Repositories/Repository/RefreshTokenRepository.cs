@@ -6,9 +6,9 @@ namespace OperationIntelligence.DB.Repositories
 {
     public class RefreshTokenRepository : IRefreshTokenRepository
     {
-        private readonly DonationDbContext _context;
+        private readonly OperationIntelligenceDbContext _context;
 
-        public RefreshTokenRepository(DonationDbContext context)
+        public RefreshTokenRepository(OperationIntelligenceDbContext context)
         {
             _context = context;
         }

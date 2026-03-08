@@ -13,7 +13,7 @@ namespace OperationIntelligence.DB.Entities
         [MaxLength(256)]
         public string Token { get; set; } = default!;
 
-        // FK to AspNetUsers
+        // FK to PlatformUsers
         [Required]
         public string UserId { get; set; } = default!;
 
@@ -29,6 +29,6 @@ namespace OperationIntelligence.DB.Entities
 
         // Nav property
         [ForeignKey(nameof(UserId))]
-        public ApplicationUser User { get; set; } = default!;
+        public PlatformUser User { get; set; } = default!;
     }
 }

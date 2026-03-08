@@ -1,13 +1,13 @@
-using OperationIntelligence.DB;
+using OperationIntelligence.DB.Entities;
 using System.Threading.Tasks;
 
 namespace OperationIntelligence.DB.Repositories
 {
-   public interface IAuthRepository
-{
-    Task<ApplicationUser?> FindByEmailAsync(string email);
-    Task<ApplicationUser> CreateUserAsync(ApplicationUser user, string password);
-    Task<bool> CheckPasswordAsync(ApplicationUser user, string password);
-}
+    public interface IAuthRepository
+    {
+        Task<PlatformUser?> FindByEmailAsync(string email);
+        Task<PlatformUser> CreateUserAsync(PlatformUser user, string password);
+        Task<bool> CheckPasswordAsync(PlatformUser user, string password);
+    }
 
 }

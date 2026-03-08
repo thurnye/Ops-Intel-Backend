@@ -5,9 +5,9 @@ namespace OperationIntelligence.DB.Repositories
 {
     public class DonationRepository : IDonationRepository
     {
-        private readonly DonationDbContext _context;
+        private readonly OperationIntelligenceDbContext _context;
 
-        public DonationRepository(DonationDbContext context)
+        public DonationRepository(OperationIntelligenceDbContext context)
         {
             _context = context;
         }

@@ -25,7 +25,7 @@ public class TestWebAppFactory : WebApplicationFactory<Program>
         {
             var sp = services.BuildServiceProvider();
             using var scope = sp.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<DonationDbContext>();
+            var db = scope.ServiceProvider.GetRequiredService<OperationIntelligenceDbContext>();
 
             // Use EnsureCreated instead of Migrate for tests
             db.Database.EnsureCreated();

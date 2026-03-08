@@ -60,21 +60,21 @@ public class DatabaseFixture : IAsyncLifetime
         await connection.CloseAsync();
 
         // Apply EF migrations
-        var options = new DbContextOptionsBuilder<DonationDbContext>()
+        var options = new DbContextOptionsBuilder<OperationIntelligenceDbContext>()
             .UseSqlServer(_connectionString)
             .Options;
 
-        await using (var context = new DonationDbContext(options))
+        await using (var context = new OperationIntelligenceDbContext(options))
             await context.Database.MigrateAsync();
     }
 
     public async Task ResetAsync()
     {
-        var options = new DbContextOptionsBuilder<DonationDbContext>()
+        var options = new DbContextOptionsBuilder<OperationIntelligenceDbContext>()
             .UseSqlServer(_connectionString)
             .Options;
 
-        await using var context = new DonationDbContext(options);
+        await using var context = new OperationIntelligenceDbContext(options);
         await context.Database.ExecuteSqlRawAsync("DELETE FROM Donations;");
         await context.Database.ExecuteSqlRawAsync("DELETE FROM AspNetUsers;");
     }

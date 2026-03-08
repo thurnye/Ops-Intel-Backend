@@ -2,6 +2,7 @@
 ./OperationIntelligence.Api/bin
 /OperationIntelligence.Core/bin
 /OperationIntelligence.DB/bin
+/OperationIntelligence.DB/Migrations
 /OperationIntelligence.Test/bin
 obj/
 out/
@@ -78,3 +79,4 @@ _ReSharper*/
 *.bak
 *.tmp
 *.old
+saveDummies.md

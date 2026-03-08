@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using OperationIntelligence.DB.Entities;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -17,7 +17,7 @@ namespace OperationIntelligence.Core.Helpers
             _config = config;
         }
 
-        public string GenerateAccessToken(IdentityUser user)
+        public string GenerateAccessToken(PlatformUser user)
         {
             var jwt = _config.GetSection("JwtSettings");
             var key = Encoding.UTF8.GetBytes(jwt["Key"]);
