@@ -3,7 +3,7 @@
 /OperationIntelligence.Core/bin
 /OperationIntelligence.DB/bin
 /OperationIntelligence.DB/Migrations
-/OperationIntelligence.Test/bin
+/OperationIntelligence.Tests/bin
 obj/
 out/
 [Bb]uild/
