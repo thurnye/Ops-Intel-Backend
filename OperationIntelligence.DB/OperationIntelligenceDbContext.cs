@@ -40,6 +40,26 @@ namespace OperationIntelligence.DB
         public DbSet<OrderPayment> OrderPayments => Set<OrderPayment>();
 
 
+        // =========================
+        // Production DbSets
+        // =========================
+
+        public DbSet<WorkCenter> WorkCenters => Set<WorkCenter>();
+        public DbSet<Machine> Machines => Set<Machine>();
+        public DbSet<BillOfMaterial> BillsOfMaterial => Set<BillOfMaterial>();
+        public DbSet<BillOfMaterialItem> BillOfMaterialItems => Set<BillOfMaterialItem>();
+        public DbSet<Routing> Routings => Set<Routing>();
+        public DbSet<RoutingStep> RoutingSteps => Set<RoutingStep>();
+        public DbSet<ProductionOrder> ProductionOrders => Set<ProductionOrder>();
+        public DbSet<ProductionExecution> ProductionExecutions => Set<ProductionExecution>();
+        public DbSet<ProductionMaterialIssue> ProductionMaterialIssues => Set<ProductionMaterialIssue>();
+        public DbSet<ProductionMaterialConsumption> ProductionMaterialConsumptions => Set<ProductionMaterialConsumption>();
+        public DbSet<ProductionOutput> ProductionOutputs => Set<ProductionOutput>();
+        public DbSet<ProductionScrap> ProductionScraps => Set<ProductionScrap>();
+        public DbSet<ProductionDowntime> ProductionDowntimes => Set<ProductionDowntime>();
+        public DbSet<ProductionLaborLog> ProductionLaborLogs => Set<ProductionLaborLog>();
+        public DbSet<ProductionQualityCheck> ProductionQualityChecks => Set<ProductionQualityCheck>();
+
 
 
         // protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -105,7 +125,7 @@ namespace OperationIntelligence.DB
                     {
                         property.SetColumnType("datetime2");
                     }
-                    
+
                     if (property.ClrType == typeof(decimal) || property.ClrType == typeof(decimal?))
                     {
                         if (property.Name.Contains("Quantity"))

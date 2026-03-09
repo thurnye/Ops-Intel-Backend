@@ -120,6 +120,22 @@ builder.Services.AddScoped<IOrderImageRepository, OrderImageRepository>();
 builder.Services.AddScoped<IOrderNoteRepository, OrderNoteRepository>();
 builder.Services.AddScoped<IOrderAddressRepository, OrderAddressRepository>();
 
+// PRODCTION
+builder.Services.AddScoped<IWorkCenterRepository, WorkCenterRepository>();
+builder.Services.AddScoped<IMachineRepository, MachineRepository>();
+builder.Services.AddScoped<IBillOfMaterialRepository, BillOfMaterialRepository>();
+builder.Services.AddScoped<IBillOfMaterialItemRepository, BillOfMaterialItemRepository>();
+builder.Services.AddScoped<IRoutingRepository, RoutingRepository>();
+builder.Services.AddScoped<IRoutingStepRepository, RoutingStepRepository>();
+builder.Services.AddScoped<IProductionOrderRepository, ProductionOrderRepository>();
+builder.Services.AddScoped<IProductionExecutionRepository, ProductionExecutionRepository>();
+builder.Services.AddScoped<IProductionMaterialIssueRepository, ProductionMaterialIssueRepository>();
+builder.Services.AddScoped<IProductionMaterialConsumptionRepository, ProductionMaterialConsumptionRepository>();
+builder.Services.AddScoped<IProductionOutputRepository, ProductionOutputRepository>();
+builder.Services.AddScoped<IProductionScrapRepository, ProductionScrapRepository>();
+builder.Services.AddScoped<IProductionDowntimeRepository, ProductionDowntimeRepository>();
+builder.Services.AddScoped<IProductionLaborLogRepository, ProductionLaborLogRepository>();
+builder.Services.AddScoped<IProductionQualityCheckRepository, ProductionQualityCheckRepository>();
 
 // =========== End Of  Repositories =================================
 
@@ -149,10 +165,25 @@ builder.Services.AddScoped<IOrderImageService, OrderImageService>();
 builder.Services.AddScoped<IOrderNoteService, OrderNoteService>();
 builder.Services.AddScoped<IOrderAddressService, OrderAddressService>();
 
+// Production
+builder.Services.AddScoped<IWorkCenterService, WorkCenterService>();
+builder.Services.AddScoped<IMachineService, MachineService>();
+builder.Services.AddScoped<IBillOfMaterialService, BillOfMaterialService>();
+builder.Services.AddScoped<IBillOfMaterialItemService, BillOfMaterialItemService>();
+builder.Services.AddScoped<IRoutingService, RoutingService>();
+builder.Services.AddScoped<IRoutingStepService, RoutingStepService>();
+builder.Services.AddScoped<IProductionOrderService, ProductionOrderService>();
+builder.Services.AddScoped<IProductionExecutionService, ProductionExecutionService>();
+builder.Services.AddScoped<IProductionMaterialIssueService, ProductionMaterialIssueService>();
+builder.Services.AddScoped<IProductionMaterialConsumptionService, ProductionMaterialConsumptionService>();
+builder.Services.AddScoped<IProductionOutputService, ProductionOutputService>();
+builder.Services.AddScoped<IProductionScrapService, ProductionScrapService>();
+builder.Services.AddScoped<IProductionDowntimeService, ProductionDowntimeService>();
+builder.Services.AddScoped<IProductionLaborLogService, ProductionLaborLogService>();
+builder.Services.AddScoped<IProductionQualityCheckService, ProductionQualityCheckService>();
+
 
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<CreateProductRequestValidator>();
-builder.Services.AddValidatorsFromAssemblyContaining<CreateOrderRequestValidator>();
 builder.Services.AddHttpContextAccessor();
 
 
