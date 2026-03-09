@@ -28,6 +28,7 @@ public class OrderItem : OrderBaseEntity
 
     public string? Remarks { get; set; }
     public int SortOrder { get; set; }
+    public ICollection<ShipmentItem> ShipmentItems { get; set; } = new List<ShipmentItem>();
 
     public bool IsActive { get; set; } = true;
 }

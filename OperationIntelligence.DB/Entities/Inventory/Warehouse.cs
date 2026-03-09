@@ -17,4 +17,7 @@ public class Warehouse: AuditableEntity
 
     public ICollection<InventoryStock> InventoryStocks { get; set; } = new List<InventoryStock>();
     public ICollection<StockMovement> StockMovements { get; set; } = new List<StockMovement>();
+    public ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
+    public ICollection<DeliveryRun> DeliveryRuns { get; set; } = new List<DeliveryRun>();
+    public ICollection<DockAppointment> DockAppointments { get; set; } = new List<DockAppointment>();
 }

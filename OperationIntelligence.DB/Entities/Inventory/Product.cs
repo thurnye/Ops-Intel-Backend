@@ -43,4 +43,5 @@ public class Product: AuditableEntity
     public ICollection<InventoryStock> InventoryStocks { get; set; } = new List<InventoryStock>();
     public ICollection<StockMovement> StockMovements { get; set; } = new List<StockMovement>();
     public ICollection<ProductSupplier> ProductSuppliers { get; set; } = new List<ProductSupplier>();
+    public ICollection<ShipmentItem> ShipmentItems { get; set; } = new List<ShipmentItem>();
 }

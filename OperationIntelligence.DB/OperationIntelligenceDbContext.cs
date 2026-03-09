@@ -85,6 +85,28 @@ namespace OperationIntelligence.DB
         public DbSet<ScheduleStatusHistory> ScheduleStatusHistories { get; set; }
         public DbSet<ScheduleAuditLog> ScheduleAuditLogs { get; set; }
 
+        // =========================
+        // Shipments DbSets
+        // =========================
+        public DbSet<Shipment> Shipments => Set<Shipment>();
+        public DbSet<ShipmentItem> ShipmentItems => Set<ShipmentItem>();
+        public DbSet<ShipmentPackage> ShipmentPackages => Set<ShipmentPackage>();
+        public DbSet<ShipmentPackageItem> ShipmentPackageItems => Set<ShipmentPackageItem>();
+        public DbSet<ShipmentTrackingEvent> ShipmentTrackingEvents => Set<ShipmentTrackingEvent>();
+        public DbSet<ShipmentDocument> ShipmentDocuments => Set<ShipmentDocument>();
+        public DbSet<ShipmentStatusHistory> ShipmentStatusHistories => Set<ShipmentStatusHistory>();
+        public DbSet<ShipmentException> ShipmentExceptions => Set<ShipmentException>();
+        public DbSet<ShipmentCharge> ShipmentCharges => Set<ShipmentCharge>();
+        public DbSet<Carrier> Carriers => Set<Carrier>();
+        public DbSet<CarrierService> CarrierServices => Set<CarrierService>();
+        public DbSet<ShipmentAddress> ShipmentAddresses => Set<ShipmentAddress>();
+        public DbSet<DeliveryRun> DeliveryRuns => Set<DeliveryRun>();
+        public DbSet<DockAppointment> DockAppointments => Set<DockAppointment>();
+        public DbSet<ShipmentInsurance> ShipmentInsurances => Set<ShipmentInsurance>();
+        public DbSet<ReturnShipment> ReturnShipments => Set<ReturnShipment>();
+        public DbSet<ReturnShipmentItem> ReturnShipmentItems => Set<ReturnShipmentItem>();
+        public DbSet<CustomsDocument> CustomsDocuments => Set<CustomsDocument>();
+
         // protected override void OnModelCreating(ModelBuilder modelBuilder)
         // {
         //     // Auth

@@ -159,6 +159,15 @@ builder.Services.AddScoped<IScheduleRescheduleHistoryRepository, ScheduleResched
 builder.Services.AddScoped<IScheduleStatusHistoryRepository, ScheduleStatusHistoryRepository>();
 builder.Services.AddScoped<IScheduleAuditLogRepository, ScheduleAuditLogRepository>();
 
+// Shipment
+builder.Services.AddScoped<IShipmentRepository, ShipmentRepository>();
+builder.Services.AddScoped<ICarrierRepository, CarrierRepository>();
+builder.Services.AddScoped<IShipmentAddressRepository, ShipmentAddressRepository>();
+builder.Services.AddScoped<IDeliveryRunRepository, DeliveryRunRepository>();
+builder.Services.AddScoped<IDockAppointmentRepository, DockAppointmentRepository>();
+builder.Services.AddScoped<IReturnShipmentRepository, ReturnShipmentRepository>();
+builder.Services.AddScoped<IShipmentLookupRepository, ShipmentLookupRepository>();
+
 // =========== End Of  Repositories =================================
 
 // =========== Services =================================
@@ -216,6 +225,15 @@ builder.Services.AddScoped<IScheduleMaterialService, ScheduleMaterialService>();
 builder.Services.AddScoped<IScheduleExceptionService, ScheduleExceptionService>();
 builder.Services.AddScoped<IScheduleRevisionService, ScheduleRevisionService>();
 builder.Services.AddScoped<IScheduleAuditService, ScheduleAuditService>();
+
+// Shipment
+builder.Services.AddScoped<IShipmentService, ShipmentService>();
+builder.Services.AddScoped<ICarrierService, ShipmentCarrierService>();
+builder.Services.AddScoped<IShipmentAddressService, ShipmentAddressService>();
+builder.Services.AddScoped<IDeliveryRunService, DeliveryRunService>();
+builder.Services.AddScoped<IDockAppointmentService, DockAppointmentService>();
+builder.Services.AddScoped<IReturnShipmentService, ReturnShipmentService>();
+builder.Services.AddScoped<IShipmentLookupService, ShipmentLookupService>();
 
 
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();

@@ -49,6 +49,8 @@ public class Order : OrderBaseEntity
     public ICollection<OrderAddress> Addresses { get; set; } = new List<OrderAddress>();
     public ICollection<OrderNote> OrderNotes { get; set; } = new List<OrderNote>();
     public ICollection<OrderPayment> Payments { get; set; } = new List<OrderPayment>();
+    public ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
+    public ICollection<ReturnShipment> ReturnShipments { get; set; } = new List<ReturnShipment>();
 
     public bool IsActive { get; set; } = true;
 }
