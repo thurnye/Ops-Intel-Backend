@@ -120,7 +120,7 @@ builder.Services.AddScoped<IOrderImageRepository, OrderImageRepository>();
 builder.Services.AddScoped<IOrderNoteRepository, OrderNoteRepository>();
 builder.Services.AddScoped<IOrderAddressRepository, OrderAddressRepository>();
 
-// PRODCTION
+// PRODUCTION
 builder.Services.AddScoped<IWorkCenterRepository, WorkCenterRepository>();
 builder.Services.AddScoped<IMachineRepository, MachineRepository>();
 builder.Services.AddScoped<IBillOfMaterialRepository, BillOfMaterialRepository>();
@@ -136,6 +136,28 @@ builder.Services.AddScoped<IProductionScrapRepository, ProductionScrapRepository
 builder.Services.AddScoped<IProductionDowntimeRepository, ProductionDowntimeRepository>();
 builder.Services.AddScoped<IProductionLaborLogRepository, ProductionLaborLogRepository>();
 builder.Services.AddScoped<IProductionQualityCheckRepository, ProductionQualityCheckRepository>();
+
+
+// Scheduling
+builder.Services.AddScoped<ISchedulePlanRepository, SchedulePlanRepository>();
+builder.Services.AddScoped<IScheduleJobRepository, ScheduleJobRepository>();
+builder.Services.AddScoped<IScheduleOperationRepository, ScheduleOperationRepository>();
+builder.Services.AddScoped<IScheduleOperationDependencyRepository, ScheduleOperationDependencyRepository>();
+builder.Services.AddScoped<IScheduleOperationConstraintRepository, ScheduleOperationConstraintRepository>();
+builder.Services.AddScoped<IScheduleOperationResourceOptionRepository, ScheduleOperationResourceOptionRepository>();
+builder.Services.AddScoped<IScheduleResourceAssignmentRepository, ScheduleResourceAssignmentRepository>();
+builder.Services.AddScoped<IShiftRepository, ShiftRepository>();
+builder.Services.AddScoped<IResourceCalendarRepository, ResourceCalendarRepository>();
+builder.Services.AddScoped<IResourceCalendarExceptionRepository, ResourceCalendarExceptionRepository>();
+builder.Services.AddScoped<ICapacityReservationRepository, CapacityReservationRepository>();
+builder.Services.AddScoped<IResourceCapacitySnapshotRepository, ResourceCapacitySnapshotRepository>();
+builder.Services.AddScoped<IDispatchQueueRepository, DispatchQueueRepository>();
+builder.Services.AddScoped<IScheduleMaterialCheckRepository, ScheduleMaterialCheckRepository>();
+builder.Services.AddScoped<IScheduleExceptionRepository, ScheduleExceptionRepository>();
+builder.Services.AddScoped<IScheduleRevisionRepository, ScheduleRevisionRepository>();
+builder.Services.AddScoped<IScheduleRescheduleHistoryRepository, ScheduleRescheduleHistoryRepository>();
+builder.Services.AddScoped<IScheduleStatusHistoryRepository, ScheduleStatusHistoryRepository>();
+builder.Services.AddScoped<IScheduleAuditLogRepository, ScheduleAuditLogRepository>();
 
 // =========== End Of  Repositories =================================
 
@@ -181,6 +203,19 @@ builder.Services.AddScoped<IProductionScrapService, ProductionScrapService>();
 builder.Services.AddScoped<IProductionDowntimeService, ProductionDowntimeService>();
 builder.Services.AddScoped<IProductionLaborLogService, ProductionLaborLogService>();
 builder.Services.AddScoped<IProductionQualityCheckService, ProductionQualityCheckService>();
+
+// Scheduling
+builder.Services.AddScoped<ISchedulePlanService, SchedulePlanService>();
+builder.Services.AddScoped<IScheduleJobService, ScheduleJobService>();
+builder.Services.AddScoped<IScheduleOperationService, ScheduleOperationService>();
+builder.Services.AddScoped<IShiftService, ShiftService>();
+builder.Services.AddScoped<IResourceCalendarService, ResourceCalendarService>();
+builder.Services.AddScoped<ICapacityService, CapacityService>();
+builder.Services.AddScoped<IDispatchService, DispatchService>();
+builder.Services.AddScoped<IScheduleMaterialService, ScheduleMaterialService>();
+builder.Services.AddScoped<IScheduleExceptionService, ScheduleExceptionService>();
+builder.Services.AddScoped<IScheduleRevisionService, ScheduleRevisionService>();
+builder.Services.AddScoped<IScheduleAuditService, ScheduleAuditService>();
 
 
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();

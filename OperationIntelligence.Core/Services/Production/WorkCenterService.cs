@@ -50,10 +50,10 @@ public class WorkCenterService : IWorkCenterService
     public async Task<WorkCenterResponse> CreateAsync(CreateWorkCenterRequest request, string? createdBy = null, CancellationToken cancellationToken = default)
     {
         var warehouseExists = await _warehouseRepository.ExistsAsync(x => x.Id == request.WarehouseId && !x.IsDeleted, cancellationToken);
-        if (!warehouseExists) throw new InvalidOperationException("Warehouse does not exist.");
+        if (!warehouseExists) throw new InvalidOperationException(ProductionErrorMessages.WarehouseDoesNotExist);
 
         var codeExists = await _workCenterRepository.CodeExistsAsync(request.Code.Trim(), null, cancellationToken);
-        if (codeExists) throw new InvalidOperationException("Work center code already exists.");
+        if (codeExists) throw new InvalidOperationException(ProductionErrorMessages.WorkCenterCodeAlreadyExists);
 
         var entity = new WorkCenter
         {
@@ -78,10 +78,10 @@ public class WorkCenterService : IWorkCenterService
         if (entity is null || entity.IsDeleted) return null;
 
         var warehouseExists = await _warehouseRepository.ExistsAsync(x => x.Id == request.WarehouseId && !x.IsDeleted, cancellationToken);
-        if (!warehouseExists) throw new InvalidOperationException("Warehouse does not exist.");
+        if (!warehouseExists) throw new InvalidOperationException(ProductionErrorMessages.WarehouseDoesNotExist);
 
         var codeExists = await _workCenterRepository.CodeExistsAsync(request.Code.Trim(), id, cancellationToken);
-        if (codeExists) throw new InvalidOperationException("Work center code already exists.");
+        if (codeExists) throw new InvalidOperationException(ProductionErrorMessages.WorkCenterCodeAlreadyExists);
 
         entity.Code = request.Code.Trim();
         entity.Name = request.Name.Trim();

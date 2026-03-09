@@ -59,13 +59,13 @@ public class BillOfMaterialService : IBillOfMaterialService
     public async Task<BillOfMaterialResponse> CreateAsync(CreateBillOfMaterialRequest request, string? createdBy = null, CancellationToken cancellationToken = default)
     {
         var productExists = await _productRepository.ExistsAsync(x => x.Id == request.ProductId && !x.IsDeleted, cancellationToken);
-        if (!productExists) throw new InvalidOperationException("Product does not exist.");
+        if (!productExists) throw new InvalidOperationException(ProductionErrorMessages.ProductDoesNotExist);
 
         var uomExists = await _uomRepository.ExistsAsync(x => x.Id == request.UnitOfMeasureId && !x.IsDeleted, cancellationToken);
-        if (!uomExists) throw new InvalidOperationException("Unit of measure does not exist.");
+        if (!uomExists) throw new InvalidOperationException(ProductionErrorMessages.UnitOfMeasureDoesNotExist);
 
         var codeExists = await _bomRepository.BomCodeExistsAsync(request.BomCode.Trim(), null, cancellationToken);
-        if (codeExists) throw new InvalidOperationException("BOM code already exists.");
+        if (codeExists) throw new InvalidOperationException(ProductionErrorMessages.BomCodeAlreadyExists);
 
         var entity = new BillOfMaterial
         {
@@ -93,16 +93,16 @@ public class BillOfMaterialService : IBillOfMaterialService
     public async Task<BillOfMaterialItemResponse> AddItemAsync(CreateBillOfMaterialItemRequest request, string? createdBy = null, CancellationToken cancellationToken = default)
     {
         var bom = await _bomRepository.GetByIdAsync(request.BillOfMaterialId, cancellationToken);
-        if (bom is null || bom.IsDeleted) throw new InvalidOperationException("BOM does not exist.");
+        if (bom is null || bom.IsDeleted) throw new InvalidOperationException(ProductionErrorMessages.BomDoesNotExist);
 
         var productExists = await _productRepository.ExistsAsync(x => x.Id == request.MaterialProductId && !x.IsDeleted, cancellationToken);
-        if (!productExists) throw new InvalidOperationException("Material product does not exist.");
+        if (!productExists) throw new InvalidOperationException(ProductionErrorMessages.MaterialProductDoesNotExist);
 
         var uomExists = await _uomRepository.ExistsAsync(x => x.Id == request.UnitOfMeasureId && !x.IsDeleted, cancellationToken);
-        if (!uomExists) throw new InvalidOperationException("Unit of measure does not exist.");
+        if (!uomExists) throw new InvalidOperationException(ProductionErrorMessages.UnitOfMeasureDoesNotExist);
 
         var sequenceExists = await _bomItemRepository.GetByBillOfMaterialAndSequenceAsync(request.BillOfMaterialId, request.Sequence, cancellationToken);
-        if (sequenceExists is not null) throw new InvalidOperationException("Sequence already exists in this BOM.");
+        if (sequenceExists is not null) throw new InvalidOperationException(ProductionErrorMessages.SequenceAlreadyExistsInBom);
 
         var entity = new BillOfMaterialItem
         {

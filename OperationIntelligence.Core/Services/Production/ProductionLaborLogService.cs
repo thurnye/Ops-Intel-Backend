@@ -22,7 +22,7 @@ public class ProductionLaborLogService : IProductionLaborLogService
     public async Task<ProductionLaborLogResponse> CreateAsync(CreateProductionLaborLogRequest request, string? createdBy = null, CancellationToken cancellationToken = default)
     {
         var executionExists = await _executionRepository.ExistsAsync(x => x.Id == request.ProductionExecutionId && !x.IsDeleted, cancellationToken);
-        if (!executionExists) throw new InvalidOperationException("Production execution does not exist.");
+        if (!executionExists) throw new InvalidOperationException(ProductionErrorMessages.ProductionExecutionDoesNotExist);
 
         var entity = new ProductionLaborLog
         {

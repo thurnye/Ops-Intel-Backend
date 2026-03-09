@@ -70,28 +70,28 @@ public class ProductionOrderService : IProductionOrderService
     public async Task<ProductionOrderResponse> CreateAsync(CreateProductionOrderRequest request, string? createdBy = null, CancellationToken cancellationToken = default)
     {
         var productExists = await _productRepository.ExistsAsync(x => x.Id == request.ProductId && !x.IsDeleted, cancellationToken);
-        if (!productExists) throw new InvalidOperationException("Product does not exist.");
+        if (!productExists) throw new InvalidOperationException(ProductionErrorMessages.ProductDoesNotExist);
 
         var uomExists = await _uomRepository.ExistsAsync(x => x.Id == request.UnitOfMeasureId && !x.IsDeleted, cancellationToken);
-        if (!uomExists) throw new InvalidOperationException("Unit of measure does not exist.");
+        if (!uomExists) throw new InvalidOperationException(ProductionErrorMessages.UnitOfMeasureDoesNotExist);
 
         var warehouseExists = await _warehouseRepository.ExistsAsync(x => x.Id == request.WarehouseId && !x.IsDeleted, cancellationToken);
-        if (!warehouseExists) throw new InvalidOperationException("Warehouse does not exist.");
+        if (!warehouseExists) throw new InvalidOperationException(ProductionErrorMessages.WarehouseDoesNotExist);
 
         if (request.BillOfMaterialId.HasValue)
         {
             var bom = await _bomRepository.GetByIdAsync(request.BillOfMaterialId.Value, cancellationToken);
-            if (bom is null || bom.IsDeleted || !bom.IsActive) throw new InvalidOperationException("Bill of material does not exist or is inactive.");
+            if (bom is null || bom.IsDeleted || !bom.IsActive) throw new InvalidOperationException(ProductionErrorMessages.BillOfMaterialDoesNotExistOrIsInactive);
         }
 
         if (request.RoutingId.HasValue)
         {
             var routing = await _routingRepository.GetByIdAsync(request.RoutingId.Value, cancellationToken);
-            if (routing is null || routing.IsDeleted || !routing.IsActive) throw new InvalidOperationException("Routing does not exist or is inactive.");
+            if (routing is null || routing.IsDeleted || !routing.IsActive) throw new InvalidOperationException(ProductionErrorMessages.RoutingDoesNotExistOrIsInactive);
         }
 
         var exists = await _productionOrderRepository.ProductionOrderNumberExistsAsync(request.ProductionOrderNumber.Trim(), null, cancellationToken);
-        if (exists) throw new InvalidOperationException("Production order number already exists.");
+        if (exists) throw new InvalidOperationException(ProductionErrorMessages.ProductionOrderNumberAlreadyExists);
 
         var entity = new ProductionOrder
         {

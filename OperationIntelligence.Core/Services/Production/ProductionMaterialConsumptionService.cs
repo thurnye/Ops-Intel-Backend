@@ -24,7 +24,7 @@ public class ProductionMaterialConsumptionService : IProductionMaterialConsumpti
     public async Task<ProductionMaterialConsumptionResponse> CreateAsync(CreateProductionMaterialConsumptionRequest request, string? createdBy = null, CancellationToken cancellationToken = default)
     {
         var issueExists = await _issueRepository.ExistsAsync(x => x.Id == request.ProductionMaterialIssueId && !x.IsDeleted, cancellationToken);
-        if (!issueExists) throw new InvalidOperationException("Production material issue does not exist.");
+        if (!issueExists) throw new InvalidOperationException(ProductionErrorMessages.ProductionMaterialIssueDoesNotExist);
 
         var entity = new ProductionMaterialConsumption
         {

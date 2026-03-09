@@ -54,10 +54,10 @@ public class MachineService : IMachineService
     public async Task<MachineResponse> CreateAsync(CreateMachineRequest request, string? createdBy = null, CancellationToken cancellationToken = default)
     {
         var workCenterExists = await _workCenterRepository.ExistsAsync(x => x.Id == request.WorkCenterId && !x.IsDeleted && x.IsActive, cancellationToken);
-        if (!workCenterExists) throw new InvalidOperationException("Work center does not exist or is inactive.");
+        if (!workCenterExists) throw new InvalidOperationException(ProductionErrorMessages.WorkCenterDoesNotExistOrIsInactive);
 
         var codeExists = await _machineRepository.MachineCodeExistsAsync(request.MachineCode.Trim(), null, cancellationToken);
-        if (codeExists) throw new InvalidOperationException("Machine code already exists.");
+        if (codeExists) throw new InvalidOperationException(ProductionErrorMessages.MachineCodeAlreadyExists);
 
         var entity = new Machine
         {
@@ -86,10 +86,10 @@ public class MachineService : IMachineService
         if (entity is null || entity.IsDeleted) return null;
 
         var workCenterExists = await _workCenterRepository.ExistsAsync(x => x.Id == request.WorkCenterId && !x.IsDeleted && x.IsActive, cancellationToken);
-        if (!workCenterExists) throw new InvalidOperationException("Work center does not exist or is inactive.");
+        if (!workCenterExists) throw new InvalidOperationException(ProductionErrorMessages.WorkCenterDoesNotExistOrIsInactive);
 
         var codeExists = await _machineRepository.MachineCodeExistsAsync(request.MachineCode.Trim(), id, cancellationToken);
-        if (codeExists) throw new InvalidOperationException("Machine code already exists.");
+        if (codeExists) throw new InvalidOperationException(ProductionErrorMessages.MachineCodeAlreadyExists);
 
         entity.MachineCode = request.MachineCode.Trim();
         entity.Name = request.Name.Trim();

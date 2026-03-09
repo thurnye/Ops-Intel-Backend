@@ -61,6 +61,29 @@ namespace OperationIntelligence.DB
         public DbSet<ProductionQualityCheck> ProductionQualityChecks => Set<ProductionQualityCheck>();
 
 
+        // =========================
+        // Scheduling DbSets
+        // =========================
+
+        public DbSet<SchedulePlan> SchedulePlans { get; set; }
+        public DbSet<ScheduleJob> ScheduleJobs { get; set; }
+        public DbSet<ScheduleOperation> ScheduleOperations { get; set; }
+        public DbSet<ScheduleOperationDependency> ScheduleOperationDependencies { get; set; }
+        public DbSet<ScheduleOperationConstraint> ScheduleOperationConstraints { get; set; }
+        public DbSet<ScheduleOperationResourceOption> ScheduleOperationResourceOptions { get; set; }
+        public DbSet<ScheduleResourceAssignment> ScheduleResourceAssignments { get; set; }
+        public DbSet<Shift> Shifts { get; set; }
+        public DbSet<ResourceCalendar> ResourceCalendars { get; set; }
+        public DbSet<ResourceCalendarException> ResourceCalendarExceptions { get; set; }
+        public DbSet<CapacityReservation> CapacityReservations { get; set; }
+        public DbSet<ResourceCapacitySnapshot> ResourceCapacitySnapshots { get; set; }
+        public DbSet<DispatchQueueItem> DispatchQueueItems { get; set; }
+        public DbSet<ScheduleMaterialCheck> ScheduleMaterialChecks { get; set; }
+        public DbSet<ScheduleException> ScheduleExceptions { get; set; }
+        public DbSet<ScheduleRevision> ScheduleRevisions { get; set; }
+        public DbSet<ScheduleRescheduleHistory> ScheduleRescheduleHistories { get; set; }
+        public DbSet<ScheduleStatusHistory> ScheduleStatusHistories { get; set; }
+        public DbSet<ScheduleAuditLog> ScheduleAuditLogs { get; set; }
 
         // protected override void OnModelCreating(ModelBuilder modelBuilder)
         // {

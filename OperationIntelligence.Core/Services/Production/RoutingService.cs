@@ -57,10 +57,10 @@ public class RoutingService : IRoutingService
     public async Task<RoutingResponse> CreateAsync(CreateRoutingRequest request, string? createdBy = null, CancellationToken cancellationToken = default)
     {
         var productExists = await _productRepository.ExistsAsync(x => x.Id == request.ProductId && !x.IsDeleted, cancellationToken);
-        if (!productExists) throw new InvalidOperationException("Product does not exist.");
+        if (!productExists) throw new InvalidOperationException(ProductionErrorMessages.ProductDoesNotExist);
 
         var codeExists = await _routingRepository.RoutingCodeExistsAsync(request.RoutingCode.Trim(), null, cancellationToken);
-        if (codeExists) throw new InvalidOperationException("Routing code already exists.");
+        if (codeExists) throw new InvalidOperationException(ProductionErrorMessages.RoutingCodeAlreadyExists);
 
         var entity = new Routing
         {
@@ -86,13 +86,13 @@ public class RoutingService : IRoutingService
     public async Task<RoutingStepResponse> AddStepAsync(CreateRoutingStepRequest request, string? createdBy = null, CancellationToken cancellationToken = default)
     {
         var routing = await _routingRepository.GetByIdAsync(request.RoutingId, cancellationToken);
-        if (routing is null || routing.IsDeleted) throw new InvalidOperationException("Routing does not exist.");
+        if (routing is null || routing.IsDeleted) throw new InvalidOperationException(ProductionErrorMessages.RoutingDoesNotExist);
 
         var workCenterExists = await _workCenterRepository.ExistsAsync(x => x.Id == request.WorkCenterId && !x.IsDeleted && x.IsActive, cancellationToken);
-        if (!workCenterExists) throw new InvalidOperationException("Work center does not exist or is inactive.");
+        if (!workCenterExists) throw new InvalidOperationException(ProductionErrorMessages.WorkCenterDoesNotExistOrIsInactive);
 
         var sequenceExists = await _routingStepRepository.GetByRoutingAndSequenceAsync(request.RoutingId, request.Sequence, cancellationToken);
-        if (sequenceExists is not null) throw new InvalidOperationException("Sequence already exists in this routing.");
+        if (sequenceExists is not null) throw new InvalidOperationException(ProductionErrorMessages.SequenceAlreadyExistsInRouting);
 
         var entity = new RoutingStep
         {

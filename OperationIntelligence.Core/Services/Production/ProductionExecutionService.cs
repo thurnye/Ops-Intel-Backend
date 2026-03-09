@@ -55,10 +55,10 @@ public class ProductionExecutionService : IProductionExecutionService
     public async Task<ProductionExecutionResponse> CreateAsync(CreateProductionExecutionRequest request, string? createdBy = null, CancellationToken cancellationToken = default)
     {
         var orderExists = await _orderRepository.ExistsAsync(x => x.Id == request.ProductionOrderId && !x.IsDeleted, cancellationToken);
-        if (!orderExists) throw new InvalidOperationException("Production order does not exist.");
+        if (!orderExists) throw new InvalidOperationException(ProductionErrorMessages.ProductionOrderDoesNotExist);
 
         var workCenterExists = await _workCenterRepository.ExistsAsync(x => x.Id == request.WorkCenterId && !x.IsDeleted && x.IsActive, cancellationToken);
-        if (!workCenterExists) throw new InvalidOperationException("Work center does not exist or is inactive.");
+        if (!workCenterExists) throw new InvalidOperationException(ProductionErrorMessages.WorkCenterDoesNotExistOrIsInactive);
 
         var entity = new ProductionExecution
         {

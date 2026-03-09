@@ -22,7 +22,7 @@ public class ProductionOutputService : IProductionOutputService
     public async Task<ProductionOutputResponse> CreateAsync(CreateProductionOutputRequest request, string? createdBy = null, CancellationToken cancellationToken = default)
     {
         var orderExists = await _orderRepository.ExistsAsync(x => x.Id == request.ProductionOrderId && !x.IsDeleted, cancellationToken);
-        if (!orderExists) throw new InvalidOperationException("Production order does not exist.");
+        if (!orderExists) throw new InvalidOperationException(ProductionErrorMessages.ProductionOrderDoesNotExist);
 
         var entity = new ProductionOutput
         {
