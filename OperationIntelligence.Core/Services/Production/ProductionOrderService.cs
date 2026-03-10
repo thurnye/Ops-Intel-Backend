@@ -34,12 +34,51 @@ public class ProductionOrderService : IProductionOrderService
         return entity is null || entity.IsDeleted ? null : entity.ToResponse();
     }
 
-    public async Task<PagedResponse<ProductionOrderSummaryResponse>> GetPagedAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<PagedResponse<ProductionOrderSummaryResponse>> GetPagedAsync(ProductionOrderQueryRequest request, CancellationToken cancellationToken = default)
     {
-        pageNumber = pageNumber <= 0 ? 1 : pageNumber;
-        pageSize = pageSize <= 0 ? 10 : pageSize;
+        var pageNumber = request.PageNumber <= 0 ? 1 : request.PageNumber;
+        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
 
-        var query = _productionOrderRepository.Query().AsNoTracking().Where(x => !x.IsDeleted).OrderByDescending(x => x.CreatedAtUtc);
+        var query = _productionOrderRepository.Query()
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted);
+
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var term = request.SearchTerm.Trim();
+            query = query.Where(x =>
+                x.ProductionOrderNumber.Contains(term) ||
+                x.Product.Name.Contains(term) ||
+                x.Product.SKU.Contains(term) ||
+                (x.BatchNumber != null && x.BatchNumber.Contains(term)));
+        }
+
+        if (request.Status.HasValue)
+        {
+            query = query.Where(x => x.Status == request.Status.Value);
+        }
+
+        if (request.Priority.HasValue)
+        {
+            query = query.Where(x => x.Priority == request.Priority.Value);
+        }
+
+        if (request.WarehouseId.HasValue)
+        {
+            query = query.Where(x => x.WarehouseId == request.WarehouseId.Value);
+        }
+
+        if (request.PlannedStartDateFrom.HasValue)
+        {
+            query = query.Where(x => x.PlannedStartDate >= request.PlannedStartDateFrom.Value);
+        }
+
+        if (request.PlannedStartDateTo.HasValue)
+        {
+            query = query.Where(x => x.PlannedStartDate <= request.PlannedStartDateTo.Value);
+        }
+
+        query = query.OrderByDescending(x => x.CreatedAtUtc);
         var total = await query.CountAsync(cancellationToken);
         var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).Select(x => new ProductionOrderSummaryResponse
         {

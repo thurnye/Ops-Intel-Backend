@@ -50,6 +50,20 @@ public class ScheduleJobRepository : IScheduleJobRepository
     public async Task<(IReadOnlyList<ScheduleJob> Items, int TotalRecords)> GetPagedAsync(
         int pageNumber,
         int pageSize,
+        string? search = null,
+        DateTime? startDateUtc = null,
+        DateTime? endDateUtc = null,
+        Guid? schedulePlanId = null,
+        Guid? productionOrderId = null,
+        Guid? orderId = null,
+        Guid? productId = null,
+        Guid? warehouseId = null,
+        int? status = null,
+        int? priority = null,
+        bool? materialsReady = null,
+        int? materialReadinessStatus = null,
+        bool? qualityHold = null,
+        bool? isRushOrder = null,
         CancellationToken cancellationToken = default)
     {
         pageNumber = pageNumber <= 0 ? 1 : pageNumber;
@@ -61,8 +75,86 @@ public class ScheduleJobRepository : IScheduleJobRepository
             .Include(x => x.Order)
             .Include(x => x.Product)
             .Include(x => x.Warehouse)
-            .Where(x => !x.IsDeleted)
-            .OrderByDescending(x => x.CreatedAtUtc);
+            .Where(x => !x.IsDeleted);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(x =>
+                x.JobNumber.Contains(term) ||
+                x.JobName.Contains(term) ||
+                x.ProductionOrder.ProductionOrderNumber.Contains(term) ||
+                (x.Order != null && x.Order.OrderNumber.Contains(term)) ||
+                x.Product.Name.Contains(term) ||
+                x.Product.SKU.Contains(term));
+        }
+
+        if (startDateUtc.HasValue)
+        {
+            query = query.Where(x => x.PlannedEndUtc >= startDateUtc.Value);
+        }
+
+        if (endDateUtc.HasValue)
+        {
+            query = query.Where(x => x.PlannedStartUtc <= endDateUtc.Value);
+        }
+
+        if (schedulePlanId.HasValue)
+        {
+            query = query.Where(x => x.SchedulePlanId == schedulePlanId.Value);
+        }
+
+        if (productionOrderId.HasValue)
+        {
+            query = query.Where(x => x.ProductionOrderId == productionOrderId.Value);
+        }
+
+        if (orderId.HasValue)
+        {
+            query = query.Where(x => x.OrderId == orderId.Value);
+        }
+
+        if (productId.HasValue)
+        {
+            query = query.Where(x => x.ProductId == productId.Value);
+        }
+
+        if (warehouseId.HasValue)
+        {
+            query = query.Where(x => x.WarehouseId == warehouseId.Value);
+        }
+
+        if (status.HasValue)
+        {
+            query = query.Where(x => (int)x.Status == status.Value);
+        }
+
+        if (priority.HasValue)
+        {
+            query = query.Where(x => (int)x.Priority == priority.Value);
+        }
+
+        if (materialsReady.HasValue)
+        {
+            query = query.Where(x => x.MaterialsReady == materialsReady.Value);
+        }
+
+        if (materialReadinessStatus.HasValue)
+        {
+            query = query.Where(x => (int)x.MaterialReadinessStatus == materialReadinessStatus.Value);
+        }
+
+        if (qualityHold.HasValue)
+        {
+            query = query.Where(x => x.QualityHold == qualityHold.Value);
+        }
+
+        if (isRushOrder.HasValue)
+        {
+            query = query.Where(x => x.IsRushOrder == isRushOrder.Value);
+        }
+
+        query = query.OrderByDescending(x => x.CreatedAtUtc);
 
         var totalRecords = await query.CountAsync(cancellationToken);
 

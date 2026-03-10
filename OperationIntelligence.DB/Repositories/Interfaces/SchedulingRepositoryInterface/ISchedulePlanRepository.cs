@@ -10,6 +10,14 @@ public interface ISchedulePlanRepository
     Task<(IReadOnlyList<SchedulePlan> Items, int TotalRecords)> GetPagedAsync(
         int pageNumber,
         int pageSize,
+        string? search = null,
+        DateTime? startDateUtc = null,
+        DateTime? endDateUtc = null,
+        Guid? warehouseId = null,
+        int? status = null,
+        int? generationMode = null,
+        int? schedulingStrategy = null,
+        bool? isActive = null,
         CancellationToken cancellationToken = default);
 
     Task AddAsync(SchedulePlan entity, CancellationToken cancellationToken = default);

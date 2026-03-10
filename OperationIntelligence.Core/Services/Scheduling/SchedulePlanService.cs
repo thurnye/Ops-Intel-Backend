@@ -175,7 +175,18 @@ public class SchedulePlanService : ISchedulePlanService
 
     public async Task<PagedResponse<SchedulePlanResponse>> GetAllAsync(GetSchedulePlansRequest request, CancellationToken cancellationToken = default)
     {
-        var (items, totalRecords) = await _schedulePlanRepository.GetPagedAsync(request.PageNumber, request.PageSize, cancellationToken);
+        var (items, totalRecords) = await _schedulePlanRepository.GetPagedAsync(
+            request.PageNumber,
+            request.PageSize,
+            request.Search,
+            request.StartDateUtc,
+            request.EndDateUtc,
+            request.WarehouseId,
+            request.Status,
+            request.GenerationMode,
+            request.SchedulingStrategy,
+            request.IsActive,
+            cancellationToken);
 
         return new PagedResponse<SchedulePlanResponse>
         {

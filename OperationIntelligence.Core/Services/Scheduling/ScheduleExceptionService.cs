@@ -72,7 +72,20 @@ public class ScheduleExceptionService : IScheduleExceptionService
 
     public async Task<PagedResponse<ScheduleExceptionResponse>> GetAllAsync(GetScheduleExceptionsRequest request, CancellationToken cancellationToken = default)
     {
-        var (items, totalRecords) = await _scheduleExceptionRepository.GetPagedAsync(request.PageNumber, request.PageSize, cancellationToken);
+        var (items, totalRecords) = await _scheduleExceptionRepository.GetPagedAsync(
+            request.PageNumber,
+            request.PageSize,
+            request.Search,
+            request.StartDateUtc,
+            request.EndDateUtc,
+            request.SchedulePlanId,
+            request.ScheduleJobId,
+            request.ScheduleOperationId,
+            request.ExceptionType,
+            request.Severity,
+            request.Status,
+            request.AssignedTo,
+            cancellationToken);
 
         return new PagedResponse<ScheduleExceptionResponse>
         {

@@ -17,9 +17,9 @@ public class ProductionOrdersController : BaseApiController
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetPaged([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetPaged([FromQuery] ProductionOrderQueryRequest request, CancellationToken cancellationToken = default)
     {
-        var result = await _productionOrderService.GetPagedAsync(pageNumber, pageSize, cancellationToken);
+        var result = await _productionOrderService.GetPagedAsync(request, cancellationToken);
         return PagedOkResponse(result);
     }
 

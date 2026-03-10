@@ -42,6 +42,14 @@ public class SchedulePlanRepository : ISchedulePlanRepository
     public async Task<(IReadOnlyList<SchedulePlan> Items, int TotalRecords)> GetPagedAsync(
         int pageNumber,
         int pageSize,
+        string? search = null,
+        DateTime? startDateUtc = null,
+        DateTime? endDateUtc = null,
+        Guid? warehouseId = null,
+        int? status = null,
+        int? generationMode = null,
+        int? schedulingStrategy = null,
+        bool? isActive = null,
         CancellationToken cancellationToken = default)
     {
         pageNumber = pageNumber <= 0 ? 1 : pageNumber;
@@ -50,8 +58,53 @@ public class SchedulePlanRepository : ISchedulePlanRepository
         var query = _context.SchedulePlans
             .AsNoTracking()
             .Include(x => x.Warehouse)
-            .Where(x => !x.IsDeleted)
-            .OrderByDescending(x => x.CreatedAtUtc);
+            .Where(x => !x.IsDeleted);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(x =>
+                x.PlanNumber.Contains(term) ||
+                x.Name.Contains(term) ||
+                (x.Description != null && x.Description.Contains(term)));
+        }
+
+        if (startDateUtc.HasValue)
+        {
+            query = query.Where(x => x.PlanningEndDateUtc >= startDateUtc.Value);
+        }
+
+        if (endDateUtc.HasValue)
+        {
+            query = query.Where(x => x.PlanningStartDateUtc <= endDateUtc.Value);
+        }
+
+        if (warehouseId.HasValue)
+        {
+            query = query.Where(x => x.WarehouseId == warehouseId.Value);
+        }
+
+        if (status.HasValue)
+        {
+            query = query.Where(x => (int)x.Status == status.Value);
+        }
+
+        if (generationMode.HasValue)
+        {
+            query = query.Where(x => (int)x.GenerationMode == generationMode.Value);
+        }
+
+        if (schedulingStrategy.HasValue)
+        {
+            query = query.Where(x => (int)x.SchedulingStrategy == schedulingStrategy.Value);
+        }
+
+        if (isActive.HasValue)
+        {
+            query = query.Where(x => x.IsActive == isActive.Value);
+        }
+
+        query = query.OrderByDescending(x => x.CreatedAtUtc);
 
         var totalRecords = await query.CountAsync(cancellationToken);
 

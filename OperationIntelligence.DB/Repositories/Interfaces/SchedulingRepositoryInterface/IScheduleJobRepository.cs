@@ -10,6 +10,20 @@ public interface IScheduleJobRepository
     Task<(IReadOnlyList<ScheduleJob> Items, int TotalRecords)> GetPagedAsync(
         int pageNumber,
         int pageSize,
+        string? search = null,
+        DateTime? startDateUtc = null,
+        DateTime? endDateUtc = null,
+        Guid? schedulePlanId = null,
+        Guid? productionOrderId = null,
+        Guid? orderId = null,
+        Guid? productId = null,
+        Guid? warehouseId = null,
+        int? status = null,
+        int? priority = null,
+        bool? materialsReady = null,
+        int? materialReadinessStatus = null,
+        bool? qualityHold = null,
+        bool? isRushOrder = null,
         CancellationToken cancellationToken = default);
 
     Task AddAsync(ScheduleJob entity, CancellationToken cancellationToken = default);

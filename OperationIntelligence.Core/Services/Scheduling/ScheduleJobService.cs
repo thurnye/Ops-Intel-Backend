@@ -207,7 +207,24 @@ public class ScheduleJobService : IScheduleJobService
 
     public async Task<PagedResponse<ScheduleJobResponse>> GetAllAsync(GetScheduleJobsRequest request, CancellationToken cancellationToken = default)
     {
-        var (items, totalRecords) = await _scheduleJobRepository.GetPagedAsync(request.PageNumber, request.PageSize, cancellationToken);
+        var (items, totalRecords) = await _scheduleJobRepository.GetPagedAsync(
+            request.PageNumber,
+            request.PageSize,
+            request.Search,
+            request.StartDateUtc,
+            request.EndDateUtc,
+            request.SchedulePlanId,
+            request.ProductionOrderId,
+            request.OrderId,
+            request.ProductId,
+            request.WarehouseId,
+            request.Status,
+            request.Priority,
+            request.MaterialsReady,
+            request.MaterialReadinessStatus,
+            request.QualityHold,
+            request.IsRushOrder,
+            cancellationToken);
 
         return new PagedResponse<ScheduleJobResponse>
         {
