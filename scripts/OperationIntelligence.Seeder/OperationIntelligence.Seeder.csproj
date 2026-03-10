@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../OperationIntelligence.Core/OperationIntelligence.Core.csproj" />
     <ProjectReference Include="../../OperationIntelligence.DB/OperationIntelligence.DB.csproj" />
   </ItemGroup>
 </Project>

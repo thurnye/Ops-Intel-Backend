@@ -21,7 +21,11 @@ namespace OperationIntelligence.Api
             }
 
             app.UseCors("AllowFrontend");
-            app.UseHttpsRedirection();
+
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+            }
 
             app.UseMiddleware<ErrorHandlingMiddleware>();
             app.UseMiddleware<SanitizationMiddleware>();

@@ -12,6 +12,7 @@ namespace OperationIntelligence.Core
         private readonly IEmailVerificationTokenRepository _emailVerificationTokenRepository;
         private readonly IPasswordHistoryRepository _passwordHistoryRepository;
         private readonly ILoginAttemptRepository _loginAttemptRepository;
+        private readonly IMediaFileRepository _mediaFileRepository;
         private readonly INormalizationService _normalizationService;
         private readonly IPasswordService _passwordService;
         private readonly ITokenService _tokenService;
@@ -25,6 +26,7 @@ namespace OperationIntelligence.Core
             IEmailVerificationTokenRepository emailVerificationTokenRepository,
             IPasswordHistoryRepository passwordHistoryRepository,
             ILoginAttemptRepository loginAttemptRepository,
+            IMediaFileRepository mediaFileRepository,
             INormalizationService normalizationService,
             IPasswordService passwordService,
             ITokenService tokenService)
@@ -37,6 +39,7 @@ namespace OperationIntelligence.Core
             _emailVerificationTokenRepository = emailVerificationTokenRepository;
             _passwordHistoryRepository = passwordHistoryRepository;
             _loginAttemptRepository = loginAttemptRepository;
+            _mediaFileRepository = mediaFileRepository;
             _normalizationService = normalizationService;
             _passwordService = passwordService;
             _tokenService = tokenService;
@@ -61,9 +64,25 @@ namespace OperationIntelligence.Core
             if (!_passwordService.IsStrongPassword(request.Password))
                 throw new InvalidOperationException("Password does not meet complexity requirements.");
 
+            Guid? avatarFileId = null;
+            string avatar = string.Empty;
+            if (request.AvatarFileId.HasValue)
+            {
+                var mediaFiles = await _mediaFileRepository.GetByIdsAsync([request.AvatarFileId.Value], cancellationToken);
+                if (mediaFiles.Count > 0)
+                {
+                    avatarFileId = request.AvatarFileId.Value;
+                    var mediaFile = mediaFiles[0];
+                    avatar = mediaFile.PublicUrl ?? mediaFile.StoragePath;
+                }
+            }
+
             var user = new PlatformUser
             {
+                FirstName = request.FirstName.Trim(),
+                LastName = request.LastName.Trim(),
                 Email = request.Email.Trim(),
+                Avatar = avatar,
                 NormalizedEmail = normalizedEmail,
                 UserName = request.UserName?.Trim(),
                 NormalizedUserName = normalizedUserName,
@@ -90,7 +109,7 @@ namespace OperationIntelligence.Core
                 StateOrProvince = request.StateOrProvince,
                 Country = request.Country,
                 PostalCode = request.PostalCode,
-                AvatarFileId = request.AvatarFileId
+                AvatarFileId = avatarFileId
             };
 
             await _platformUserRepository.AddUserWithProfileAsync(user, profile, cancellationToken);
