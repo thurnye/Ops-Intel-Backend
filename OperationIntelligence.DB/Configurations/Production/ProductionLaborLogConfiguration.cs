@@ -21,8 +21,7 @@ public class ProductionLaborLogConfiguration : IEntityTypeConfiguration<Producti
             .HasMaxLength(1000);
 
         builder.Property(x => x.UserId)
-            .IsRequired()
-            .HasMaxLength(64);
+            .IsRequired();
 
         builder.HasIndex(x => x.ProductionExecutionId);
         builder.HasIndex(x => x.UserId);

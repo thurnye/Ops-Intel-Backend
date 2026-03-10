@@ -8,7 +8,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using System.Net.Http.Json;
-using OperationIntelligence.Api.Models;
+using OperationIntelligence.Api;
 
 public class DatabaseFixture : IAsyncLifetime
 {

@@ -3,7 +3,7 @@ namespace OperationIntelligence.Core.Models.Production.Requests;
 public class CreateProductionLaborLogRequest
 {
     public Guid ProductionExecutionId { get; set; }
-    public string UserId { get; set; } = string.Empty;
+    public Guid UserId { get; set; }
     public decimal HoursWorked { get; set; }
     public decimal HourlyRate { get; set; }
     public DateTime WorkDate { get; set; }

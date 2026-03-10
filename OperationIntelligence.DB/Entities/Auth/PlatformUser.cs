@@ -1,53 +1,63 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace OperationIntelligence.DB.Entities
+namespace OperationIntelligence.DB;
+
+public class PlatformUser : AuditableEntity
 {
-    public class PlatformUser
-    {
-        [Key]
-        [MaxLength(64)]
-        public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    [Required]
+    [MaxLength(256)]
+    public string FirstName { get; set; } = string.Empty;
+    [Required]
+    [MaxLength(256)]
+    public string LastName { get; set; } = string.Empty;
+    [Required]
 
-        [Required]
-        [MaxLength(100)]
-        public string FirstName { get; set; } = string.Empty;
+    [MaxLength(256)]
+    public string Email { get; set; } = string.Empty;
 
-        [Required]
-        [MaxLength(100)]
-        public string LastName { get; set; } = string.Empty;
 
-        [Required]
-        [MaxLength(256)]
-        public string Email { get; set; } = string.Empty;
+    [MaxLength(256)]
+    public string Avatar { get; set; } = string.Empty;
 
-        [Required]
-        [MaxLength(512)]
-        public string PasswordHash { get; set; } = string.Empty;
+    [Required]
+    [MaxLength(256)]
+    public string NormalizedEmail { get; set; } = string.Empty;
 
-        [MaxLength(512)]
-        public string Avatar { get; set; } = string.Empty;
+    [MaxLength(100)]
+    public string? UserName { get; set; }
 
-        public DateTime? Birthdate { get; set; }
+    [MaxLength(100)]
+    public string? NormalizedUserName { get; set; }
 
-        [MaxLength(50)]
-        public string Gender { get; set; } = string.Empty;
+    [Required]
+    [MaxLength(512)]
+    public string PasswordHash { get; set; } = string.Empty;
 
-        [MaxLength(50)]
-        public string PhoneNumber { get; set; } = string.Empty;
+    [MaxLength(128)]
+    public string? PasswordSalt { get; set; }
 
-        [MaxLength(200)]
-        public string Address { get; set; } = string.Empty;
+    public bool EmailConfirmed { get; set; } = false;
+    public bool PhoneNumberConfirmed { get; set; } = false;
+    public bool TwoFactorEnabled { get; set; } = false;
 
-        [MaxLength(100)]
-        public string City { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
+    public bool IsLocked { get; set; } = false;
 
-        [MaxLength(100)]
-        public string State { get; set; } = string.Empty;
+    public int AccessFailedCount { get; set; } = 0;
+    public DateTime? LockoutEndUtc { get; set; }
 
-        [MaxLength(100)]
-        public string Country { get; set; } = string.Empty;
+    public DateTime? LastLoginAtUtc { get; set; }
+    public DateTime? PasswordChangedAtUtc { get; set; }
 
-        [MaxLength(20)]
-        public string PostalCode { get; set; } = string.Empty;
-    }
+    [MaxLength(50)]
+    public string AuthProvider { get; set; } = "Local"; // Local, Google, Microsoft, etc.
+
+    [MaxLength(200)]
+    public string? ExternalProviderId { get; set; }
+
+    public virtual PlatformUserProfile? Profile { get; set; }
+    public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+    public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    public virtual ICollection<UserSession> Sessions { get; set; } = new List<UserSession>();
+    public virtual ICollection<PasswordHistory> PasswordHistories { get; set; } = new List<PasswordHistory>();
 }

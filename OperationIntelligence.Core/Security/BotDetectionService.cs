@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace OperationIntelligence.Core.Security
+namespace OperationIntelligence.Core
 {
     public class BotDetectionService
     {

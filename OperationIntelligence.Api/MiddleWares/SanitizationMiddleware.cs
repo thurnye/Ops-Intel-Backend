@@ -1,9 +1,8 @@
 using System.Text;
 using System.Text.Json;
-using OperationIntelligence.Core.Security;
-using OperationIntelligence.Api.Models;
+using OperationIntelligence.Core;
 
-namespace OperationIntelligence.Api.Middlewares.Security
+namespace OperationIntelligence.Api
 {
     public class SanitizationMiddleware
     {

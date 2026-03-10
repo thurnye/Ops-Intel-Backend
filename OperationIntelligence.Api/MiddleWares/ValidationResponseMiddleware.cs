@@ -1,8 +1,7 @@
-using OperationIntelligence.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace OperationIntelligence.Api.Middlewares
+namespace OperationIntelligence.Api
 {
     public class ValidationResponseFilter : IActionFilter
     {

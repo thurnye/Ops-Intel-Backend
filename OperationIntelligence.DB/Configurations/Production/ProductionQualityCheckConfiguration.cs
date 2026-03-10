@@ -33,8 +33,7 @@ public class ProductionQualityCheckConfiguration : IEntityTypeConfiguration<Prod
             .HasMaxLength(1000);
 
         builder.Property(x => x.CheckedByUserId)
-            .IsRequired()
-            .HasMaxLength(64);
+            .IsRequired();
 
         builder.HasIndex(x => x.ProductionOrderId);
         builder.HasIndex(x => x.ProductionExecutionId);

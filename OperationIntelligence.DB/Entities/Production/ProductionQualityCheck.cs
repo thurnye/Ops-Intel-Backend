@@ -1,5 +1,4 @@
-﻿using OperationIntelligence.DB.Entities;
-
+﻿
 namespace OperationIntelligence.DB;
 
 public class ProductionQualityCheck : AuditableEntity
@@ -15,7 +14,7 @@ public class ProductionQualityCheck : AuditableEntity
 
     public DateTime CheckDate { get; set; }
 
-    public string CheckedByUserId { get; set; } = string.Empty;
+    public Guid CheckedByUserId { get; set; }
     public PlatformUser CheckedByUser { get; set; } = default!;
 
     public string? ReferenceStandard { get; set; }

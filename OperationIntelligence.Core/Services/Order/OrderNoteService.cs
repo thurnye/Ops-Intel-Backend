@@ -1,6 +1,6 @@
 ﻿using OperationIntelligence.DB;
 
-namespace OperationIntelligence.Core.Services;
+namespace OperationIntelligence.Core;
 
 public class OrderNoteService : IOrderNoteService
 {

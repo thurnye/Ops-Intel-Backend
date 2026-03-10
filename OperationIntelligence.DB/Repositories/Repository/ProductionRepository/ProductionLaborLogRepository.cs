@@ -17,7 +17,7 @@ public class ProductionLaborLogRepository : BaseRepository<ProductionLaborLog>, 
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<ProductionLaborLog>> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ProductionLaborLog>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .AsNoTracking()

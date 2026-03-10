@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using System.Web;
 
-namespace OperationIntelligence.Core.Security
+namespace OperationIntelligence.Core
 {
     public static class InputSanitizer
     {

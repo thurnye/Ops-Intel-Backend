@@ -9,7 +9,7 @@ public class CreateProductionQualityCheckRequestValidator : AbstractValidator<Cr
     public CreateProductionQualityCheckRequestValidator()
     {
         RuleFor(x => x.ProductionOrderId).NotEmpty();
-        RuleFor(x => x.CheckedByUserId).NotEmpty().MaximumLength(450);
+        RuleFor(x => x.CheckedByUserId).NotEmpty();
         RuleFor(x => x.CheckType).IsInEnum();
         RuleFor(x => x.Status).IsInEnum();
         RuleFor(x => x.CheckDate).NotEmpty();

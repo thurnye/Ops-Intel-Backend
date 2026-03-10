@@ -1,20 +1,36 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using OperationIntelligence.DB.Entities;
-
 namespace OperationIntelligence.DB;
 
 public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
 {
     public void Configure(EntityTypeBuilder<RefreshToken> builder)
     {
-        builder.HasKey(rt => rt.Id);
-        builder.Property(rt => rt.Token).IsRequired().HasMaxLength(256);
-        builder.HasIndex(rt => rt.Token).IsUnique();
+        builder.ToTable("RefreshTokens");
 
-        builder.HasOne(rt => rt.User)
-            .WithMany()
-            .HasForeignKey(rt => rt.UserId)
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.TokenHash)
+            .IsRequired()
+            .HasMaxLength(512);
+
+        builder.Property(x => x.CreatedByIp)
+            .HasMaxLength(100);
+
+        builder.Property(x => x.RevokedByIp)
+            .HasMaxLength(100);
+
+        builder.Property(x => x.UserAgent)
+            .HasMaxLength(500);
+
+        builder.HasIndex(x => x.UserId);
+        builder.HasIndex(x => x.TokenHash).IsUnique();
+
+        builder.HasOne(x => x.User)
+            .WithMany(x => x.RefreshTokens)
+            .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasQueryFilter(x => !x.IsDeleted);
     }
 }

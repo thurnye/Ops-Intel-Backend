@@ -1,9 +1,8 @@
 using System.Net;
 using System.Text.Json;
-using OperationIntelligence.Api.Models;
 using FluentValidation;
 
-namespace OperationIntelligence.Api.Middlewares
+namespace OperationIntelligence.Api
 {
     public class ErrorHandlingMiddleware
     {

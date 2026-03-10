@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using OperationIntelligence.Api.Models;
+using OperationIntelligence.Api;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 [Collection("Api collection")]

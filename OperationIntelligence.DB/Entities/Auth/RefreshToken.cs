@@ -1,34 +1,31 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace OperationIntelligence.DB.Entities
+namespace OperationIntelligence.DB
 {
-    public class RefreshToken
+    public class RefreshToken : AuditableEntity
     {
-        [Key]
-        public int Id { get; set; }
+        public Guid UserId { get; set; }
 
-        // The actual opaque token value (unique)
         [Required]
-        [MaxLength(256)]
-        public string Token { get; set; } = default!;
+        [MaxLength(512)]
+        public string TokenHash { get; set; } = string.Empty;
 
-        // FK to PlatformUsers
-        [Required]
-        public string UserId { get; set; } = default!;
+        public DateTime ExpiresAtUtc { get; set; }
+        public DateTime? RevokedAtUtc { get; set; }
 
-        public DateTime ExpiresAt { get; set; }
-        public bool Revoked { get; set; } = false;
+        [MaxLength(100)]
+        public string? CreatedByIp { get; set; }
 
-        // Optional: track rotation chain
-        [MaxLength(256)]
-        public string? ReplacedByToken { get; set; }
+        [MaxLength(100)]
+        public string? RevokedByIp { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public string? IpAddress { get; set; }
+        [MaxLength(500)]
+        public string? UserAgent { get; set; }
 
-        // Nav property
+        public Guid? ReplacedByTokenId { get; set; }
+
         [ForeignKey(nameof(UserId))]
-        public PlatformUser User { get; set; } = default!;
+        public virtual PlatformUser User { get; set; } = null!;
     }
 }

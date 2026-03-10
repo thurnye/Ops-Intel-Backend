@@ -9,7 +9,7 @@ public class CreateProductionQualityCheckRequest
     public QualityCheckType CheckType { get; set; }
     public QualityCheckStatus Status { get; set; } = QualityCheckStatus.Pending;
     public DateTime CheckDate { get; set; }
-    public string CheckedByUserId { get; set; } = string.Empty;
+    public Guid CheckedByUserId { get; set; }
     public string? ReferenceStandard { get; set; }
     public string? Findings { get; set; }
     public string? CorrectiveAction { get; set; }

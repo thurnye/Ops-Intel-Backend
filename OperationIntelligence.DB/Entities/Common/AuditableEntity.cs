@@ -2,7 +2,7 @@
 
 public class AuditableEntity : BaseEntity
 {
-    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAtUtc { get; set; }
     public string? CreatedBy { get; set; }
 
     public DateTime? UpdatedAtUtc { get; set; }

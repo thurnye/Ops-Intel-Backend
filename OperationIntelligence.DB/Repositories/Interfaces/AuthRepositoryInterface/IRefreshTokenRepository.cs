@@ -1,14 +1,9 @@
-using OperationIntelligence.DB.Entities;
+namespace OperationIntelligence.DB;
 
-namespace OperationIntelligence.Core.Interfaces
+public interface IRefreshTokenRepository : IBaseRepository<RefreshToken>
 {
-    public interface IRefreshTokenRepository
-    {
-        Task<RefreshToken?> GetByTokenAsync(string token);
-        Task<IEnumerable<RefreshToken>> GetByUserIdAsync(string userId);
-        Task<RefreshToken> CreateAsync(RefreshToken token);
-        Task InvalidateAsync(RefreshToken token);
-        Task ReplaceAsync(RefreshToken oldToken, RefreshToken newToken);
-        Task SaveChangesAsync();
-    }
+    Task<RefreshToken?> GetByTokenHashAsync(string tokenHash, CancellationToken cancellationToken = default);
+    Task<RefreshToken?> GetActiveByTokenHashAsync(string tokenHash, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<RefreshToken>> GetActiveByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task RevokeAllByUserIdAsync(Guid userId, string? revokedByIp = null, CancellationToken cancellationToken = default);
 }

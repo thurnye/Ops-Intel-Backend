@@ -1,58 +1,60 @@
-using OperationIntelligence.Core.Interfaces;
-using OperationIntelligence.DB.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace OperationIntelligence.DB.Repositories
+namespace OperationIntelligence.DB;
+
+public class RefreshTokenRepository : BaseRepository<RefreshToken>, IRefreshTokenRepository
 {
-    public class RefreshTokenRepository : IRefreshTokenRepository
+    public RefreshTokenRepository(OperationIntelligenceDbContext context) : base(context)
     {
-        private readonly OperationIntelligenceDbContext _context;
+    }
 
-        public RefreshTokenRepository(OperationIntelligenceDbContext context)
-        {
-            _context = context;
-        }
+    public async Task<RefreshToken?> GetByTokenHashAsync(string tokenHash, CancellationToken cancellationToken = default)
+    {
+        return await _context.RefreshTokens
+            .Include(x => x.User)
+                .ThenInclude(x => x.Profile)
+            .FirstOrDefaultAsync(x => x.TokenHash == tokenHash, cancellationToken);
+    }
 
-        public async Task<RefreshToken?> GetByTokenAsync(string token)
-        {
-            return await _context.RefreshTokens
-                .Include(t => t.User)  // Include the User entity
-                .AsNoTracking()
-                .FirstOrDefaultAsync(t => t.Token == token);
-        }
+    public async Task<RefreshToken?> GetActiveByTokenHashAsync(string tokenHash, CancellationToken cancellationToken = default)
+    {
+        var utcNow = DateTime.UtcNow;
 
-        public async Task<IEnumerable<RefreshToken>> GetByUserIdAsync(string userId)
-        {
-            return await _context.RefreshTokens
-                .Where(t => t.UserId == userId && !t.Revoked)
-                .ToListAsync();
-        }
+        return await _context.RefreshTokens
+            .Include(x => x.User)
+                .ThenInclude(x => x.Profile)
+            .FirstOrDefaultAsync(
+                x => x.TokenHash == tokenHash &&
+                     x.RevokedAtUtc == null &&
+                     x.ExpiresAtUtc > utcNow,
+                cancellationToken);
+    }
 
-        public async Task<RefreshToken> CreateAsync(RefreshToken token)
-        {
-            await _context.RefreshTokens.AddAsync(token);
-            await _context.SaveChangesAsync();
-            return token;
-        }
+    public async Task<IReadOnlyList<RefreshToken>> GetActiveByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var utcNow = DateTime.UtcNow;
 
-        public async Task InvalidateAsync(RefreshToken token)
-        {
-            token.Revoked = true;
-            _context.RefreshTokens.Update(token);
-            await _context.SaveChangesAsync();
-        }
+        return await _context.RefreshTokens
+            .Where(x => x.UserId == userId &&
+                        x.RevokedAtUtc == null &&
+                        x.ExpiresAtUtc > utcNow)
+            .ToListAsync(cancellationToken);
+    }
 
-        public async Task ReplaceAsync(RefreshToken oldToken, RefreshToken newToken)
-        {
-            oldToken.Revoked = true;
-            _context.RefreshTokens.Update(oldToken);
-            await _context.RefreshTokens.AddAsync(newToken);
-            await _context.SaveChangesAsync();
-        }
+    public async Task RevokeAllByUserIdAsync(Guid userId, string? revokedByIp = null, CancellationToken cancellationToken = default)
+    {
+        var utcNow = DateTime.UtcNow;
 
-        public async Task SaveChangesAsync()
+        var tokens = await _context.RefreshTokens
+            .Where(x => x.UserId == userId &&
+                        x.RevokedAtUtc == null &&
+                        x.ExpiresAtUtc > utcNow)
+            .ToListAsync(cancellationToken);
+
+        foreach (var token in tokens)
         {
-            await _context.SaveChangesAsync();
+            token.RevokedAtUtc = utcNow;
+            token.RevokedByIp = revokedByIp;
         }
     }
 }

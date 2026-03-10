@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using OperationIntelligence.Api.Models;
 using OperationIntelligence.Core;
 using OperationIntelligence.DB;
 

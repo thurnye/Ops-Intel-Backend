@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using OperationIntelligence.Api.Controllers;
-using OperationIntelligence.Api.Models;
 using OperationIntelligence.Core;
 
 namespace OperationIntelligence.Api.Controllers.Inventory;

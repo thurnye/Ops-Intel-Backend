@@ -4,7 +4,7 @@ public class ProductionLaborLogResponse
 {
     public Guid Id { get; set; }
     public Guid ProductionExecutionId { get; set; }
-    public string UserId { get; set; } = string.Empty;
+    public Guid UserId { get; set; }
     public string? UserName { get; set; }
     public string? UserEmail { get; set; }
     public decimal HoursWorked { get; set; }

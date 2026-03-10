@@ -10,7 +10,7 @@ public class ProductionQualityCheckResponse
     public QualityCheckType CheckType { get; set; }
     public QualityCheckStatus Status { get; set; }
     public DateTime CheckDate { get; set; }
-    public string CheckedByUserId { get; set; } = string.Empty;
+    public Guid CheckedByUserId { get; set; }
     public string? CheckedByUserName { get; set; }
     public string? CheckedByUserEmail { get; set; }
     public string? ReferenceStandard { get; set; }

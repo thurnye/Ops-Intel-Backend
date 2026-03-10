@@ -1,18 +1,18 @@
-using OperationIntelligence.Core.Models;
 using FluentValidation;
 
-namespace OperationIntelligence.Core.Validators
+namespace OperationIntelligence.Core
 {
     public class LoginRequestValidator : AbstractValidator<LoginRequest>
     {
         public LoginRequestValidator()
         {
-            RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("Email is required.")
-                .EmailAddress().WithMessage("Invalid email format.");
+            RuleFor(x => x.EmailOrUserName)
+                .NotEmpty()
+                .MaximumLength(256);
 
             RuleFor(x => x.Password)
-                .NotEmpty().WithMessage("Password is required.");
+                .NotEmpty()
+                .MaximumLength(128);
         }
     }
 }

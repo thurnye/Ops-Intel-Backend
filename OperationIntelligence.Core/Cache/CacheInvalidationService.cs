@@ -2,7 +2,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 
-namespace OperationIntelligence.Core.Cache
+namespace OperationIntelligence.Core
 {
     public class CacheInvalidationService
     {

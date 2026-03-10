@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
-using OperationIntelligence.Core.Models;
-using OperationIntelligence.Api.Models;
+using OperationIntelligence.Core;
+using OperationIntelligence.Api;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 [CollectionDefinition("Api collection")]
@@ -28,7 +28,7 @@ public class AuthTests
         var register = new RegisterRequest {
             FirstName = "John", LastName = "Doe",
             Email = "john.doe@test.com", Password = "Passw0rd!",
-            Avatar = "img"
+            // Avatar = "img"
         };
 
         var regRes = await _client.PostAsJsonAsync("/api/auth/register", register);
@@ -36,7 +36,7 @@ public class AuthTests
         regRes.Headers.TryGetValues("X-Access-Token", out var registerTokenValues).Should().BeTrue();
         registerTokenValues!.First().Should().NotBeNullOrWhiteSpace();
 
-        var login = new LoginRequest { Email = "john.doe@test.com", Password = "Passw0rd!" };
+        var login = new LoginRequest { EmailOrUserName = "john.doe@test.com", Password = "Passw0rd!" };
         var loginRes = await _client.PostAsJsonAsync("/api/auth/login", login);
         loginRes.StatusCode.Should().Be(HttpStatusCode.OK);
         loginRes.Headers.TryGetValues("X-Access-Token", out var loginTokenValues).Should().BeTrue();

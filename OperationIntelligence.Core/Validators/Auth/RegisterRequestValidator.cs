@@ -1,69 +1,63 @@
-using OperationIntelligence.Core.Models;
-using OperationIntelligence.Core.Security;
 using FluentValidation;
-using Microsoft.AspNetCore.Http; 
-using Microsoft.Extensions.Logging;
 
-namespace OperationIntelligence.Core.Validators
+namespace OperationIntelligence.Core
 {
     public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly BotDetectionService _botService;
-        private readonly ILogger<RegisterRequestValidator> _logger;
-
-        public RegisterRequestValidator(
-            IHttpContextAccessor httpContextAccessor,
-            BotDetectionService botService,
-            ILogger<RegisterRequestValidator> logger)
+        public RegisterRequestValidator()
         {
-            _httpContextAccessor = httpContextAccessor;
-            _botService = botService;
-            _logger = logger;
-
-            // ✅ Input validation rules
-            RuleFor(x => x.FirstName)
-                .NotEmpty().WithMessage("First name is required.")
-                .MaximumLength(50).WithMessage("First name cannot exceed 50 characters.");
-
-            RuleFor(x => x.LastName)
-                .NotEmpty().WithMessage("Last name is required.")
-                .MaximumLength(50).WithMessage("Last name cannot exceed 50 characters.");
-
             RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("Email is required.")
-                .EmailAddress().WithMessage("A valid email address is required.");
+                .NotEmpty()
+                .EmailAddress()
+                .MaximumLength(256);
+
+            RuleFor(x => x.UserName)
+                .MaximumLength(100)
+                .Matches("^[a-zA-Z0-9._-]+$")
+                .When(x => !string.IsNullOrWhiteSpace(x.UserName))
+                .WithMessage("Username can only contain letters, numbers, dots, underscores, and hyphens.");
 
             RuleFor(x => x.Password)
-                .NotEmpty().WithMessage("Password is required.")
-                .MinimumLength(6).WithMessage("Password must be at least 6 characters long.");
+                .NotEmpty()
+                .MinimumLength(8)
+                .MaximumLength(128)
+                .Matches("[A-Z]").WithMessage("Password must contain at least one uppercase letter.")
+                .Matches("[a-z]").WithMessage("Password must contain at least one lowercase letter.")
+                .Matches("[0-9]").WithMessage("Password must contain at least one number.")
+                .Matches("[^a-zA-Z0-9]").WithMessage("Password must contain at least one special character.");
 
-            // ✅ Bot detection
-            RuleFor(x => x)
-                .Must(NotBeBotRequest)
-                .WithMessage("Suspicious or automated request detected. Please try again manually.");
-        }
+            RuleFor(x => x.ConfirmPassword)
+                .Equal(x => x.Password)
+                .WithMessage("Confirm password must match password.");
 
-        private bool NotBeBotRequest(RegisterRequest request)
-        {
-            try
-            {
-                var httpRequest = _httpContextAccessor.HttpContext?.Request;
-                if (httpRequest == null) return true;
+            RuleFor(x => x.FirstName)
+                .NotEmpty()
+                .MaximumLength(100);
 
-                var isBot = _botService.IsSuspiciousRequest(httpRequest);
-                if (isBot)
-                {
-                    _logger.LogWarning("🚫 Bot-like activity detected for email: {Email}", request.Email);
-                    return false;
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Bot detection failed.");
-                return true; // fallback: don't block legit users if detection fails
-            }
+            RuleFor(x => x.LastName)
+                .NotEmpty()
+                .MaximumLength(100);
+
+            RuleFor(x => x.PhoneNumber)
+                .MaximumLength(50);
+
+            RuleFor(x => x.AddressLine1)
+                .MaximumLength(200);
+
+            RuleFor(x => x.AddressLine2)
+                .MaximumLength(200);
+
+            RuleFor(x => x.City)
+                .MaximumLength(100);
+
+            RuleFor(x => x.StateOrProvince)
+                .MaximumLength(100);
+
+            RuleFor(x => x.Country)
+                .MaximumLength(100);
+
+            RuleFor(x => x.PostalCode)
+                .MaximumLength(20);
         }
     }
 }

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace OperationIntelligence.Api.Models
+namespace OperationIntelligence.Api
 {
     public class ApiResponse<T>
     {

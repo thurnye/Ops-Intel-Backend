@@ -1,120 +1,245 @@
-using OperationIntelligence.Api.Models;
-using OperationIntelligence.Core.Interfaces;
-using OperationIntelligence.Core.Models;
-using OperationIntelligence.Core.Security;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OperationIntelligence.Core;
 
-namespace OperationIntelligence.Api.Controllers.Auth;
-
-[ApiController]
-[Route("api/[controller]")]
-public class AuthController : BaseApiController
+namespace OperationIntelligence.Api.Controllers.Auth
 {
-    private readonly IAuthService _authService;
-    private readonly BotDetectionService _botDetection;
-
-    public AuthController(IAuthService authService, BotDetectionService botDetection)
+    [Route("api/[controller]")]
+    public class AuthController : BaseApiController
     {
-        _authService = authService;
-        _botDetection = botDetection;
-    }
+        private const string RefreshTokenCookieName = "refreshToken";
 
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterRequest model)
-    {
-        if (_botDetection.IsSuspiciousRequest(Request))
+        private readonly IAuthService _authService;
+
+        public AuthController(IAuthService authService)
         {
-            return ErrorResponse(
-                StatusCodes.Status400BadRequest,
-                ErrorCode.VALIDATION_ERROR,
-                "Suspicious or automated request detected. Please try again manually.");
+            _authService = authService;
         }
 
-        var response = await _authService.RegisterAsync(model);
-        var accessToken = response.AccessToken;
-        var refreshToken = response.RefreshToken;
-
-        var cookieOptions = new CookieOptions
+        [HttpPost("register")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> Register(
+            [FromBody] RegisterRequest request,
+            CancellationToken cancellationToken)
         {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.None,
-            Expires = DateTime.UtcNow.AddDays(7)
-        };
+            var response = await _authService.RegisterAsync(request, cancellationToken);
 
-        Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
-        Response.Headers.Append("X-Access-Token", accessToken);
-        Response.Headers.Append("Access-Control-Expose-Headers", "X-Access-Token");
+            AppendRefreshTokenCookie(response.RefreshToken);
 
-        return OkResponse<object>(response.User);
-    }
-
-    [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest model)
-    {
-        var response = await _authService.LoginAsync(model);
-        var accessToken = response.AccessToken;
-        var refreshToken = response.RefreshToken;
-
-        var cookieOptions = new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.None,
-            Expires = DateTime.UtcNow.AddDays(7)
-        };
-
-        Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
-        Response.Headers.Append("X-Access-Token", accessToken);
-        Response.Headers.Append("Access-Control-Expose-Headers", "X-Access-Token");
-
-        return OkResponse<object>(response.User);
-    }
-
-    [HttpPost("refresh")]
-    public async Task<IActionResult> Refresh()
-    {
-        if (!Request.Cookies.TryGetValue("refreshToken", out var refreshToken))
-        {
-            return ErrorResponse(
-                StatusCodes.Status401Unauthorized,
-                ErrorCode.AUTHENTICATION_ERROR,
-                "Missing refresh token");
+            return OkResponse(new
+            {
+                AccessToken = response.AccessToken,
+                AccessTokenExpiresAtUtc = response.AccessTokenExpiresAtUtc,
+                User = response.User
+            });
         }
 
-        try
+        [HttpPost("login")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> Login(
+            [FromBody] LoginRequest request,
+            CancellationToken cancellationToken)
         {
-            var tokens = await _authService.RefreshTokensAsync(refreshToken);
+            var response = await _authService.LoginAsync(request, cancellationToken);
 
-            var cookieOptions = new CookieOptions
+            AppendRefreshTokenCookie(response.RefreshToken);
+
+            return OkResponse(new
+            {
+                AccessToken = response.AccessToken,
+                AccessTokenExpiresAtUtc = response.AccessTokenExpiresAtUtc,
+                User = response.User
+            });
+        }
+
+        [HttpPost("refresh")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> Refresh(CancellationToken cancellationToken)
+        {
+            if (!Request.Cookies.TryGetValue(RefreshTokenCookieName, out var refreshToken) ||
+                string.IsNullOrWhiteSpace(refreshToken))
+            {
+                return ErrorResponse(
+                    StatusCodes.Status401Unauthorized,
+                    ErrorCode.AUTHENTICATION_ERROR,
+                    "Missing refresh token.");
+            }
+
+            var response = await _authService.RefreshAsync(refreshToken, cancellationToken);
+
+            AppendRefreshTokenCookie(response.RefreshToken);
+
+            return OkResponse(new
+            {
+                AccessToken = response.AccessToken,
+                AccessTokenExpiresAtUtc = response.AccessTokenExpiresAtUtc,
+                User = response.User
+            });
+        }
+
+        [HttpPost("forgot-password")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> ForgotPassword(
+            [FromBody] ForgotPasswordRequest request,
+            CancellationToken cancellationToken)
+        {
+            await _authService.ForgotPasswordAsync(request, cancellationToken);
+
+            return OkResponse(new
+            {
+                Message = "If the account exists, password reset instructions have been initiated."
+            });
+        }
+
+        [HttpPost("reset-password")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> ResetPassword(
+            [FromBody] ResetPasswordRequest request,
+            CancellationToken cancellationToken)
+        {
+            await _authService.ResetPasswordAsync(request, cancellationToken);
+
+            DeleteRefreshTokenCookie();
+
+            return OkResponse(new
+            {
+                Message = "Password has been reset successfully."
+            });
+        }
+
+        [HttpPost("verify-email")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> VerifyEmail(
+            [FromBody] VerifyEmailRequest request,
+            CancellationToken cancellationToken)
+        {
+            await _authService.VerifyEmailAsync(request, cancellationToken);
+
+            return OkResponse(new
+            {
+                Message = "Email verified successfully."
+            });
+        }
+
+        [Authorize]
+        [HttpGet("profile")]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> Profile(CancellationToken cancellationToken)
+        {
+            var userId = GetCurrentUserId();
+            var user = await _authService.GetProfileAsync(userId, cancellationToken);
+
+            return OkResponse(user);
+        }
+
+        [Authorize]
+        [HttpGet("sessions")]
+        [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<object>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> Sessions(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10,
+            CancellationToken cancellationToken = default)
+        {
+            var userId = GetCurrentUserId();
+
+            var sessions = await _authService.GetSessionsAsync(
+                userId,
+                pageNumber,
+                pageSize,
+                cancellationToken);
+
+            return PagedOkResponse(sessions);
+        }
+
+        [Authorize]
+        [HttpDelete("sessions/{sessionId:guid}")]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> RevokeSession(
+            [FromRoute] Guid sessionId,
+            CancellationToken cancellationToken)
+        {
+            var userId = GetCurrentUserId();
+
+            await _authService.RevokeSessionAsync(userId, sessionId, cancellationToken);
+
+            return OkResponse(new
+            {
+                Message = "Session revoked successfully."
+            });
+        }
+
+        [Authorize]
+        [HttpPost("logout")]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        public IActionResult Logout()
+        {
+            DeleteRefreshTokenCookie();
+
+            return OkResponse(new
+            {
+                Message = "Logged out successfully."
+            });
+        }
+
+        private Guid GetCurrentUserId()
+        {
+            var userIdValue =
+                User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                User.FindFirstValue("sub");
+
+            if (string.IsNullOrWhiteSpace(userIdValue) || !Guid.TryParse(userIdValue, out var userId))
+            {
+                throw new UnauthorizedAccessException("Invalid authenticated user context.");
+            }
+
+            return userId;
+        }
+
+        private void AppendRefreshTokenCookie(string refreshToken)
+        {
+            var isHttps = Request.IsHttps;
+
+            var options = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
-                Expires = DateTime.UtcNow.AddDays(7)
+                Secure = isHttps,
+                SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax,
+                Expires = DateTime.UtcNow.AddDays(7),
+                Path = "/"
             };
 
-            Response.Cookies.Append("refreshToken", tokens.RefreshToken, cookieOptions);
-            Response.Headers.Append("X-Access-Token", tokens.AccessToken);
-            Response.Headers.Append("Access-Control-Expose-Headers", "X-Access-Token");
-
-            return OkResponse<object>(tokens.User);
+            Response.Cookies.Append(RefreshTokenCookieName, refreshToken, options);
         }
-        catch
+
+        private void DeleteRefreshTokenCookie()
         {
-            return ErrorResponse(
-                StatusCodes.Status401Unauthorized,
-                ErrorCode.AUTHENTICATION_ERROR,
-                "Invalid refresh token");
-        }
-    }
+            var isHttps = Request.IsHttps;
 
-    [Authorize]
-    [HttpGet("profile")]
-    public IActionResult Profile()
-    {
-        var email = User.Claims.FirstOrDefault(c => c.Type == "email")?.Value;
-        return OkResponse(new { Email = email });
+            var options = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = isHttps,
+                SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax,
+                Path = "/"
+            };
+
+            Response.Cookies.Delete(RefreshTokenCookieName, options);
+        }
     }
 }

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using OperationIntelligence.Api.Models;
+using OperationIntelligence.Api;
 using OperationIntelligence.Core;
 
 namespace OperationIntelligence.Api.Controllers;

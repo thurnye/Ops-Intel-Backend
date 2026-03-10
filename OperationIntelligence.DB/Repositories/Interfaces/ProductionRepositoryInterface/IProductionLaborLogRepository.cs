@@ -4,7 +4,7 @@ public interface IProductionLaborLogRepository : IBaseRepository<ProductionLabor
 {
     Task<IReadOnlyList<ProductionLaborLog>> GetByProductionExecutionIdAsync(Guid productionExecutionId, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<ProductionLaborLog>> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ProductionLaborLog>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<ProductionLaborLog>> GetByWorkDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default);
 }

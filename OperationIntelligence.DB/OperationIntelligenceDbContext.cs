@@ -1,5 +1,4 @@
-﻿using OperationIntelligence.DB.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 
 namespace OperationIntelligence.DB
@@ -10,8 +9,22 @@ namespace OperationIntelligence.DB
             : base(options)
         {
         }
+        // =========================
+        // Auth DbSets
+        // =========================
         public DbSet<PlatformUser> Users => Set<PlatformUser>();
+        public DbSet<PlatformUserProfile> UserProfiles => Set<PlatformUserProfile>();
+        public DbSet<MediaFile> MediaFiles => Set<MediaFile>();
+        public DbSet<Role> Roles => Set<Role>();
+        public DbSet<Permission> Permissions => Set<Permission>();
+        public DbSet<UserRole> UserRoles => Set<UserRole>();
+        public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+        public DbSet<UserSession> UserSessions => Set<UserSession>();
+        public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
+        public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+        public DbSet<PasswordHistory> PasswordHistories => Set<PasswordHistory>();
+        public DbSet<LoginAttempt> LoginAttempts => Set<LoginAttempt>();
 
         // =========================
         // Inventory DbSets
@@ -166,11 +179,6 @@ namespace OperationIntelligence.DB
                         property.SetColumnType("datetime2");
                     }
 
-                    if (property.ClrType == typeof(DateTime?))
-                    {
-                        property.SetColumnType("datetime2");
-                    }
-
                     if (property.ClrType == typeof(decimal) || property.ClrType == typeof(decimal?))
                     {
                         if (property.Name.Contains("Quantity"))
@@ -184,6 +192,65 @@ namespace OperationIntelligence.DB
                             property.SetScale(2);
                         }
                     }
+                }
+            }
+        }
+
+        public override int SaveChanges()
+        {
+            ApplyAuditInformation();
+            return base.SaveChanges();
+        }
+
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        {
+            ApplyAuditInformation();
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ApplyAuditInformation();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+        {
+            ApplyAuditInformation();
+            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        private void ApplyAuditInformation()
+        {
+            var utcNow = DateTime.UtcNow;
+
+            var entries = ChangeTracker.Entries<AuditableEntity>();
+
+            foreach (var entry in entries)
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        entry.Entity.CreatedAtUtc = utcNow;
+                        entry.Entity.UpdatedAtUtc = null;
+                        entry.Entity.DeletedAtUtc = null;
+                        entry.Entity.IsDeleted = false;
+                        break;
+
+                    case EntityState.Modified:
+                        entry.Entity.UpdatedAtUtc = utcNow;
+
+                        // Prevent accidental overwrite of created audit fields
+                        entry.Property(x => x.CreatedAtUtc).IsModified = false;
+                        entry.Property(x => x.CreatedBy).IsModified = false;
+                        break;
+
+                    case EntityState.Deleted:
+                        entry.State = EntityState.Modified;
+                        entry.Entity.IsDeleted = true;
+                        entry.Entity.DeletedAtUtc = utcNow;
+                        entry.Entity.UpdatedAtUtc = utcNow;
+                        break;
                 }
             }
         }

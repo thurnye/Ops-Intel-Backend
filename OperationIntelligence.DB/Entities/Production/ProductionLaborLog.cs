@@ -1,4 +1,4 @@
-﻿using OperationIntelligence.DB.Entities;
+﻿
 
 namespace OperationIntelligence.DB;
 
@@ -7,7 +7,7 @@ public class ProductionLaborLog : AuditableEntity
     public Guid ProductionExecutionId { get; set; }
     public ProductionExecution ProductionExecution { get; set; } = default!;
 
-    public string UserId { get; set; } = string.Empty;
+    public Guid UserId { get; set; }
     public PlatformUser User { get; set; } = default!;
 
     public decimal HoursWorked { get; set; }
