@@ -8,6 +8,10 @@ public interface ICarrierService
         string? search = null,
         bool? isActive = null,
         CancellationToken cancellationToken = default);
+    Task<CarrierMetricsSummaryResponse> GetSummaryAsync(
+        string? search = null,
+        bool? isActive = null,
+        CancellationToken cancellationToken = default);
 
     Task<CarrierResponse?> GetByIdAsync(
         Guid id,

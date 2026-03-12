@@ -22,6 +22,9 @@ public interface IShiftService
         GetShiftsRequest request,
         CancellationToken cancellationToken = default);
 
+    Task<ShiftMetricsSummaryResponse> GetSummaryAsync(
+        CancellationToken cancellationToken = default);
+
     Task<bool> DeleteAsync(
         Guid id,
         CancellationToken cancellationToken = default);

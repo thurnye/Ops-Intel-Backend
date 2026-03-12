@@ -36,6 +36,13 @@ public class ProductsController : BaseApiController
         return PagedOkResponse(result);
     }
 
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetSummary([FromQuery] ProductQueryRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _productService.GetSummaryAsync(request, cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductRequest request, CancellationToken cancellationToken)
     {

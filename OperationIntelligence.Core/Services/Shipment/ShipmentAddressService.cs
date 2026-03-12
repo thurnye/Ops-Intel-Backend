@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using OperationIntelligence.DB;
 
 namespace OperationIntelligence.Core;
@@ -29,6 +30,46 @@ public class ShipmentAddressService : IShipmentAddressService
     {
         var items = await _addressRepository.SearchAsync(search, country, city, take, cancellationToken);
         return items.Select(Map).ToList();
+    }
+
+    public async Task<ShipmentAddressMetricsSummaryResponse> GetSummaryAsync(string? search = null, string? country = null, string? city = null, CancellationToken cancellationToken = default)
+    {
+        var query = _addressRepository.Query().AsNoTracking().Where(x => !x.IsDeleted);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var normalizedSearch = search.Trim();
+            query = query.Where(x =>
+                x.ContactName.Contains(normalizedSearch) ||
+                (x.CompanyName != null && x.CompanyName.Contains(normalizedSearch)) ||
+                x.AddressLine1.Contains(normalizedSearch) ||
+                x.City.Contains(normalizedSearch) ||
+                x.Country.Contains(normalizedSearch));
+        }
+
+        if (!string.IsNullOrWhiteSpace(country))
+        {
+            var normalizedCountry = country.Trim();
+            query = query.Where(x => x.Country == normalizedCountry);
+        }
+
+        if (!string.IsNullOrWhiteSpace(city))
+        {
+            var normalizedCity = city.Trim();
+            query = query.Where(x => x.City == normalizedCity);
+        }
+
+        var items = await query
+            .Select(x => new { x.Country, x.City, x.CompanyName })
+            .ToListAsync(cancellationToken);
+
+        return new ShipmentAddressMetricsSummaryResponse
+        {
+            TotalAddresses = items.Count,
+            CountriesRepresented = items.Where(x => !string.IsNullOrWhiteSpace(x.Country)).Select(x => x.Country!.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).Count(),
+            CitiesRepresented = items.Where(x => !string.IsNullOrWhiteSpace(x.City)).Select(x => x.City!.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).Count(),
+            CompanyBackedAddresses = items.Count(x => !string.IsNullOrWhiteSpace(x.CompanyName))
+        };
     }
 
     public async Task<ShipmentAddressResponse> CreateAsync(CreateShipmentAddressRequest request, string? currentUser = null, CancellationToken cancellationToken = default)

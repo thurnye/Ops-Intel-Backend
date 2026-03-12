@@ -85,6 +85,26 @@ public class WarehouseService : IWarehouseService
         return warehouses.Select(Map).ToList();
     }
 
+    public async Task<WarehouseMetricsSummaryResponse> GetSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var warehouses = await _warehouseRepository.GetAllAsync(cancellationToken);
+
+        return new WarehouseMetricsSummaryResponse
+        {
+            TotalWarehouses = warehouses.Count,
+            ActiveWarehouses = warehouses.Count(warehouse => warehouse.IsActive),
+            CountriesRepresented = warehouses
+                .Where(warehouse => !string.IsNullOrWhiteSpace(warehouse.Country))
+                .Select(warehouse => warehouse.Country!.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Count(),
+            AddressReadyWarehouses = warehouses.Count(warehouse =>
+                !string.IsNullOrWhiteSpace(warehouse.AddressLine1) &&
+                !string.IsNullOrWhiteSpace(warehouse.City) &&
+                !string.IsNullOrWhiteSpace(warehouse.Country))
+        };
+    }
+
     private static WarehouseResponse Map(Warehouse warehouse) => new()
     {
         Id = warehouse.Id,

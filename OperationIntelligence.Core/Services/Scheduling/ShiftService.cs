@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OperationIntelligence.Core.Models.Scheduling.Requests.Shift;
 using OperationIntelligence.Core.Models.Scheduling.Responses.Shift;
@@ -8,11 +9,16 @@ namespace OperationIntelligence.Core;
 public class ShiftService : IShiftService
 {
     private readonly IShiftRepository _shiftRepository;
+    private readonly OperationIntelligenceDbContext _dbContext;
     private readonly ILogger<ShiftService> _logger;
 
-    public ShiftService(IShiftRepository shiftRepository, ILogger<ShiftService> logger)
+    public ShiftService(
+        IShiftRepository shiftRepository,
+        OperationIntelligenceDbContext dbContext,
+        ILogger<ShiftService> logger)
     {
         _shiftRepository = shiftRepository;
+        _dbContext = dbContext;
         _logger = logger;
     }
 
@@ -76,6 +82,27 @@ public class ShiftService : IShiftService
             PageSize = request.PageSize,
             TotalRecords = totalRecords,
             Items = items.Select(MapToResponse).ToList()
+        };
+    }
+
+    public async Task<ShiftMetricsSummaryResponse> GetSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var items = await _dbContext.Shifts
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted)
+            .Select(x => new { x.IsActive, x.CrossesMidnight, x.WorkCenterId })
+            .ToListAsync(cancellationToken);
+
+        return new ShiftMetricsSummaryResponse
+        {
+            TotalShifts = items.Count,
+            ActiveShifts = items.Count(x => x.IsActive),
+            OvernightShifts = items.Count(x => x.CrossesMidnight),
+            WorkCentersRepresented = items
+                .Where(x => x.WorkCenterId.HasValue)
+                .Select(x => x.WorkCenterId!.Value)
+                .Distinct()
+                .Count()
         };
     }
 

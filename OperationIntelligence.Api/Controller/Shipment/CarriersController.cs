@@ -25,6 +25,16 @@ public class CarriersController : BaseApiController
         return PagedOkResponse(result);
     }
 
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetSummary(
+        [FromQuery] string? search = null,
+        [FromQuery] bool? isActive = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _carrierService.GetSummaryAsync(search, isActive, cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {

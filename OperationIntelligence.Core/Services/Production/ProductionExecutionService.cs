@@ -52,6 +52,23 @@ public class ProductionExecutionService : IProductionExecutionService
         return new PagedResponse<ProductionExecutionSummaryResponse> { PageNumber = pageNumber, PageSize = pageSize, TotalRecords = total, Items = items };
     }
 
+    public async Task<ProductionExecutionMetricsSummaryResponse> GetSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var items = await _executionRepository.Query()
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted)
+            .Select(x => x.Status)
+            .ToListAsync(cancellationToken);
+
+        return new ProductionExecutionMetricsSummaryResponse
+        {
+            TotalExecutions = items.Count,
+            RunningExecutions = items.Count(status => status == ExecutionStatus.Running),
+            PausedExecutions = items.Count(status => status == ExecutionStatus.Paused),
+            CompletedExecutions = items.Count(status => status == ExecutionStatus.Completed)
+        };
+    }
+
     public async Task<ProductionExecutionResponse> CreateAsync(CreateProductionExecutionRequest request, string? createdBy = null, CancellationToken cancellationToken = default)
     {
         var orderExists = await _orderRepository.ExistsAsync(x => x.Id == request.ProductionOrderId && !x.IsDeleted, cancellationToken);

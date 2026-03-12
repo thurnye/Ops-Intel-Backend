@@ -39,45 +39,7 @@ public class ProductionOrderService : IProductionOrderService
         var pageNumber = request.PageNumber <= 0 ? 1 : request.PageNumber;
         var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
 
-        var query = _productionOrderRepository.Query()
-            .AsNoTracking()
-            .Where(x => !x.IsDeleted);
-
-        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
-        {
-            var term = request.SearchTerm.Trim();
-            query = query.Where(x =>
-                x.ProductionOrderNumber.Contains(term) ||
-                x.Product.Name.Contains(term) ||
-                x.Product.SKU.Contains(term) ||
-                (x.BatchNumber != null && x.BatchNumber.Contains(term)));
-        }
-
-        if (request.Status.HasValue)
-        {
-            query = query.Where(x => x.Status == request.Status.Value);
-        }
-
-        if (request.Priority.HasValue)
-        {
-            query = query.Where(x => x.Priority == request.Priority.Value);
-        }
-
-        if (request.WarehouseId.HasValue)
-        {
-            query = query.Where(x => x.WarehouseId == request.WarehouseId.Value);
-        }
-
-        if (request.PlannedStartDateFrom.HasValue)
-        {
-            query = query.Where(x => x.PlannedStartDate >= request.PlannedStartDateFrom.Value);
-        }
-
-        if (request.PlannedStartDateTo.HasValue)
-        {
-            query = query.Where(x => x.PlannedStartDate <= request.PlannedStartDateTo.Value);
-        }
-
+        var query = BuildQuery(request);
         query = query.OrderByDescending(x => x.CreatedAtUtc);
         var total = await query.CountAsync(cancellationToken);
         var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).Select(x => new ProductionOrderSummaryResponse
@@ -104,6 +66,22 @@ public class ProductionOrderService : IProductionOrderService
         }).ToListAsync(cancellationToken);
 
         return new PagedResponse<ProductionOrderSummaryResponse> { PageNumber = pageNumber, PageSize = pageSize, TotalRecords = total, Items = items };
+    }
+
+    public async Task<ProductionOrderMetricsSummaryResponse> GetSummaryAsync(ProductionOrderQueryRequest request, CancellationToken cancellationToken = default)
+    {
+        var statuses = await BuildQuery(request)
+            .Select(x => x.Status)
+            .ToListAsync(cancellationToken);
+
+        return new ProductionOrderMetricsSummaryResponse
+        {
+            TotalOrders = statuses.Count,
+            InProgressOrders = statuses.Count(x => x == ProductionOrderStatus.InProgress),
+            PausedOrders = statuses.Count(x => x == ProductionOrderStatus.Paused),
+            CompletedOrders = statuses.Count(x => x == ProductionOrderStatus.Completed),
+            PlannedOrDraftOrders = statuses.Count(x => x == ProductionOrderStatus.Planned || x == ProductionOrderStatus.Draft)
+        };
     }
 
     public async Task<ProductionOrderResponse> CreateAsync(CreateProductionOrderRequest request, string? createdBy = null, CancellationToken cancellationToken = default)
@@ -207,6 +185,50 @@ public class ProductionOrderService : IProductionOrderService
 
     public Task<bool> CancelAsync(Guid id, string? updatedBy = null, CancellationToken cancellationToken = default) =>
         ChangeStatusAsync(id, ProductionOrderStatus.Cancelled, updatedBy, cancellationToken);
+
+    private IQueryable<ProductionOrder> BuildQuery(ProductionOrderQueryRequest request)
+    {
+        var query = _productionOrderRepository.Query()
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted);
+
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var term = request.SearchTerm.Trim();
+            query = query.Where(x =>
+                x.ProductionOrderNumber.Contains(term) ||
+                x.Product.Name.Contains(term) ||
+                x.Product.SKU.Contains(term) ||
+                (x.BatchNumber != null && x.BatchNumber.Contains(term)));
+        }
+
+        if (request.Status.HasValue)
+        {
+            query = query.Where(x => x.Status == request.Status.Value);
+        }
+
+        if (request.Priority.HasValue)
+        {
+            query = query.Where(x => x.Priority == request.Priority.Value);
+        }
+
+        if (request.WarehouseId.HasValue)
+        {
+            query = query.Where(x => x.WarehouseId == request.WarehouseId.Value);
+        }
+
+        if (request.PlannedStartDateFrom.HasValue)
+        {
+            query = query.Where(x => x.PlannedStartDate >= request.PlannedStartDateFrom.Value);
+        }
+
+        if (request.PlannedStartDateTo.HasValue)
+        {
+            query = query.Where(x => x.PlannedStartDate <= request.PlannedStartDateTo.Value);
+        }
+
+        return query;
+    }
 
     private async Task<bool> ChangeStatusAsync(
         Guid id,

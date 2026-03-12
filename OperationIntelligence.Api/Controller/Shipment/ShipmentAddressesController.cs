@@ -35,6 +35,17 @@ public class ShipmentAddressesController : BaseApiController
         return OkResponse(result);
     }
 
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetSummary(
+        [FromQuery] string? search = null,
+        [FromQuery] string? country = null,
+        [FromQuery] string? city = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _shipmentAddressService.GetSummaryAsync(search, country, city, cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create(
         [FromBody] CreateShipmentAddressRequest request,

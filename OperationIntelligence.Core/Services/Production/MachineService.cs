@@ -51,6 +51,24 @@ public class MachineService : IMachineService
         return new PagedResponse<MachineResponse> { PageNumber = pageNumber, PageSize = pageSize, TotalRecords = total, Items = items };
     }
 
+    public async Task<MachineMetricsSummaryResponse> GetSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var items = await _machineRepository.Query()
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted)
+            .Select(x => new { x.Status, x.WorkCenterId })
+            .ToListAsync(cancellationToken);
+
+        return new MachineMetricsSummaryResponse
+        {
+            TotalMachines = items.Count,
+            RunningMachines = items.Count(x => x.Status == MachineStatus.Running),
+            MaintenanceMachines = items.Count(x => x.Status == MachineStatus.Maintenance),
+            DownMachines = items.Count(x => x.Status == MachineStatus.Down),
+            WorkCentersRepresented = items.Select(x => x.WorkCenterId).Distinct().Count()
+        };
+    }
+
     public async Task<MachineResponse> CreateAsync(CreateMachineRequest request, string? createdBy = null, CancellationToken cancellationToken = default)
     {
         var workCenterExists = await _workCenterRepository.ExistsAsync(x => x.Id == request.WorkCenterId && !x.IsDeleted && x.IsActive, cancellationToken);

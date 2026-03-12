@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using OperationIntelligence.DB;
 
 namespace OperationIntelligence.Core;
@@ -93,6 +94,45 @@ public class ProductService : IProductService
             PageSize = pageSize,
             TotalRecords = totalRecords,
             Items = products.Select(MapToProductListItemResponse).ToList()
+        };
+    }
+
+    public async Task<ProductMetricsSummaryResponse> GetSummaryAsync(
+        ProductQueryRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _productRepository.Query().AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var term = request.SearchTerm.Trim();
+            query = query.Where(x =>
+                x.Name.Contains(term) ||
+                x.SKU.Contains(term) ||
+                (x.Barcode != null && x.Barcode.Contains(term)));
+        }
+
+        if (request.CategoryId.HasValue)
+        {
+            query = query.Where(x => x.CategoryId == request.CategoryId.Value);
+        }
+
+        if (request.Status.HasValue)
+        {
+            query = query.Where(x => x.Status == request.Status.Value);
+        }
+
+        var statuses = await query
+            .Select(x => x.Status)
+            .ToListAsync(cancellationToken);
+
+        return new ProductMetricsSummaryResponse
+        {
+            TotalProducts = statuses.Count,
+            ActiveProducts = statuses.Count(x => x == ProductStatus.Active),
+            DraftProducts = statuses.Count(x => x == ProductStatus.Draft),
+            InactiveProducts = statuses.Count(x => x == ProductStatus.Inactive),
+            DiscontinuedProducts = statuses.Count(x => x == ProductStatus.Discontinued)
         };
     }
 

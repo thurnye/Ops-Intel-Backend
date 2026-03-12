@@ -7,6 +7,8 @@ public interface IOrderService
     Task<OrderDetailResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<OrderDetailResponse?> GetByOrderNumberAsync(string orderNumber, CancellationToken cancellationToken = default);
     Task<PagedResponse<OrderListItemResponse>> GetPagedAsync(OrderQueryRequest request, CancellationToken cancellationToken = default);
+    Task<OrderOverviewMetricsSummaryResponse> GetOverviewMetricsSummaryAsync(CancellationToken cancellationToken = default);
+    Task<OrderCustomerMetricsSummaryResponse> GetCustomerMetricsSummaryAsync(CancellationToken cancellationToken = default);
     Task<OrderResponse> ChangeStatusAsync(Guid id, ChangeOrderStatusRequest request, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }

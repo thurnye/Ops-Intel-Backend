@@ -36,6 +36,13 @@ public class BrandsController : BaseApiController
         return OkResponse(result);
     }
 
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetSummary(CancellationToken cancellationToken)
+    {
+        var result = await _brandService.GetSummaryAsync(cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateBrandRequest request, CancellationToken cancellationToken)
     {

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OperationIntelligence.Core.Models.Scheduling.Requests.ScheduleJob;
 using OperationIntelligence.Core.Models.Scheduling.Responses.Material;
@@ -9,11 +10,16 @@ namespace OperationIntelligence.Core;
 public class ScheduleJobService : IScheduleJobService
 {
     private readonly IScheduleJobRepository _scheduleJobRepository;
+    private readonly OperationIntelligenceDbContext _dbContext;
     private readonly ILogger<ScheduleJobService> _logger;
 
-    public ScheduleJobService(IScheduleJobRepository scheduleJobRepository, ILogger<ScheduleJobService> logger)
+    public ScheduleJobService(
+        IScheduleJobRepository scheduleJobRepository,
+        OperationIntelligenceDbContext dbContext,
+        ILogger<ScheduleJobService> logger)
     {
         _scheduleJobRepository = scheduleJobRepository;
+        _dbContext = dbContext;
         _logger = logger;
     }
 
@@ -232,6 +238,31 @@ public class ScheduleJobService : IScheduleJobService
             PageSize = request.PageSize,
             TotalRecords = totalRecords,
             Items = items.Select(MapToResponse).ToList()
+        };
+    }
+
+    public async Task<DispatchMetricsSummaryResponse> GetDispatchSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var jobStatuses = await _dbContext.ScheduleJobs
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted)
+            .Select(x => x.Status)
+            .ToListAsync(cancellationToken);
+
+        var exceptionStatuses = await _dbContext.ScheduleExceptions
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted)
+            .Select(x => x.Status)
+            .ToListAsync(cancellationToken);
+
+        return new DispatchMetricsSummaryResponse
+        {
+            TotalJobs = jobStatuses.Count,
+            ReleasedJobs = jobStatuses.Count(x => x == ScheduleJobStatus.Released),
+            RunningJobs = jobStatuses.Count(x => x == ScheduleJobStatus.Running),
+            OpenBlockers = exceptionStatuses.Count(x =>
+                x == ScheduleExceptionStatus.Open ||
+                x == ScheduleExceptionStatus.Investigating)
         };
     }
 

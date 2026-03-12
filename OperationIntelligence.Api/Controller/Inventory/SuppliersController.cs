@@ -36,6 +36,13 @@ public class SuppliersController : BaseApiController
         return OkResponse(result);
     }
 
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetSummary(CancellationToken cancellationToken)
+    {
+        var result = await _supplierService.GetSummaryAsync(cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSupplierRequest request, CancellationToken cancellationToken)
     {

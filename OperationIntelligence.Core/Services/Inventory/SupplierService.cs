@@ -81,6 +81,25 @@ public class SupplierService : ISupplierService
         return suppliers.Select(Map).ToList();
     }
 
+    public async Task<SupplierMetricsSummaryResponse> GetSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var suppliers = await _supplierRepository.GetAllAsync(cancellationToken);
+
+        return new SupplierMetricsSummaryResponse
+        {
+            TotalSuppliers = suppliers.Count,
+            ActiveSuppliers = suppliers.Count(supplier => supplier.IsActive),
+            ContactableSuppliers = suppliers.Count(supplier =>
+                !string.IsNullOrWhiteSpace(supplier.Email) ||
+                !string.IsNullOrWhiteSpace(supplier.PhoneNumber)),
+            CountriesRepresented = suppliers
+                .Where(supplier => !string.IsNullOrWhiteSpace(supplier.Country))
+                .Select(supplier => supplier.Country!.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Count()
+        };
+    }
+
     private static SupplierResponse Map(Supplier supplier) => new()
     {
         Id = supplier.Id,

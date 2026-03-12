@@ -60,6 +60,13 @@ public class ShiftsController : BaseApiController
         return PagedOkResponse(result);
     }
 
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetSummary(CancellationToken cancellationToken)
+    {
+        var result = await _shiftService.GetSummaryAsync(cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {

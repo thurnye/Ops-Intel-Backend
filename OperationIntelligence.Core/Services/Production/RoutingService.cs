@@ -54,6 +54,23 @@ public class RoutingService : IRoutingService
         return new PagedResponse<RoutingSummaryResponse> { PageNumber = pageNumber, PageSize = pageSize, TotalRecords = total, Items = items };
     }
 
+    public async Task<RoutingMetricsSummaryResponse> GetSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var items = await _routingRepository.Query()
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted)
+            .Select(x => new { x.IsActive, x.IsDefault, x.ProductId })
+            .ToListAsync(cancellationToken);
+
+        return new RoutingMetricsSummaryResponse
+        {
+            TotalRoutings = items.Count,
+            ActiveRoutings = items.Count(x => x.IsActive),
+            DefaultRoutings = items.Count(x => x.IsDefault),
+            ProductCoverage = items.Select(x => x.ProductId).Distinct().Count()
+        };
+    }
+
     public async Task<RoutingResponse> CreateAsync(CreateRoutingRequest request, string? createdBy = null, CancellationToken cancellationToken = default)
     {
         var productExists = await _productRepository.ExistsAsync(x => x.Id == request.ProductId && !x.IsDeleted, cancellationToken);

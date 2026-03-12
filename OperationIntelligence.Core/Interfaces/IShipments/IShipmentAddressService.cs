@@ -13,6 +13,12 @@ public interface IShipmentAddressService
         int take = 25,
         CancellationToken cancellationToken = default);
 
+    Task<ShipmentAddressMetricsSummaryResponse> GetSummaryAsync(
+        string? search = null,
+        string? country = null,
+        string? city = null,
+        CancellationToken cancellationToken = default);
+
     Task<ShipmentAddressResponse> CreateAsync(
         CreateShipmentAddressRequest request,
         string? currentUser = null,

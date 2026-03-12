@@ -23,6 +23,13 @@ public class RoutingsController : BaseApiController
         return PagedOkResponse(result);
     }
 
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetSummary(CancellationToken cancellationToken = default)
+    {
+        var result = await _routingService.GetSummaryAsync(cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken = default)
     {

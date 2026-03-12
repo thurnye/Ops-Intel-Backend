@@ -23,6 +23,13 @@ public class ProductionOrdersController : BaseApiController
         return PagedOkResponse(result);
     }
 
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetSummary([FromQuery] ProductionOrderQueryRequest request, CancellationToken cancellationToken = default)
+    {
+        var result = await _productionOrderService.GetSummaryAsync(request, cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken = default)
     {

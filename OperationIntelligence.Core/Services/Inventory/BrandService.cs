@@ -61,6 +61,19 @@ public class BrandService : IBrandService
         return brands.Select(Map).ToList();
     }
 
+    public async Task<BrandMetricsSummaryResponse> GetSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var brands = await _brandRepository.GetAllAsync(cancellationToken);
+        var brandsWithDescriptions = brands.Count(brand => !string.IsNullOrWhiteSpace(brand.Description));
+
+        return new BrandMetricsSummaryResponse
+        {
+            TotalBrands = brands.Count,
+            BrandsWithDescriptions = brandsWithDescriptions,
+            DescriptionCoveragePercentage = brands.Count == 0 ? 0 : (int)Math.Round((double)brandsWithDescriptions * 100 / brands.Count)
+        };
+    }
+
     private static BrandResponse Map(Brand brand) => new()
     {
         Id = brand.Id,

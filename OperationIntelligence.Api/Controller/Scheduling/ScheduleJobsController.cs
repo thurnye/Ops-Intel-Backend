@@ -120,6 +120,13 @@ public class ScheduleJobsController : BaseApiController
         return PagedOkResponse(result);
     }
 
+    [HttpGet("dispatch-summary")]
+    public async Task<IActionResult> GetDispatchSummary(CancellationToken cancellationToken)
+    {
+        var result = await _scheduleJobService.GetDispatchSummaryAsync(cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {

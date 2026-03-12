@@ -1068,6 +1068,14 @@ public class ShipmentService : IShipmentService
         {
             TotalShipments = all.Count,
             DraftShipments = all.Count(x => x.Status == ShipmentStatus.Draft),
+            ProcessingShipments = all.Count(x =>
+                x.Status == ShipmentStatus.AwaitingAllocation ||
+                x.Status == ShipmentStatus.Allocated ||
+                x.Status == ShipmentStatus.Picking ||
+                x.Status == ShipmentStatus.Picked ||
+                x.Status == ShipmentStatus.Packing ||
+                x.Status == ShipmentStatus.Packed ||
+                x.Status == ShipmentStatus.ReadyToDispatch),
             ReadyToDispatchShipments = all.Count(x => x.Status == ShipmentStatus.ReadyToDispatch),
             InTransitShipments = all.Count(x => x.Status == ShipmentStatus.InTransit),
             DeliveredShipments = all.Count(x => x.Status == ShipmentStatus.Delivered),

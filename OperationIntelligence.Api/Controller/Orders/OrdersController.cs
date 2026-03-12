@@ -47,6 +47,22 @@ public class OrdersController : BaseApiController
         return PagedOkResponse(result);
     }
 
+    [HttpGet("overview-summary")]
+    [ProducesResponseType(typeof(OrderOverviewMetricsSummaryResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetOverviewSummary(CancellationToken cancellationToken)
+    {
+        var result = await _orderService.GetOverviewMetricsSummaryAsync(cancellationToken);
+        return OkResponse(result);
+    }
+
+    [HttpGet("customer-summary")]
+    [ProducesResponseType(typeof(OrderCustomerMetricsSummaryResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetCustomerSummary(CancellationToken cancellationToken)
+    {
+        var result = await _orderService.GetCustomerMetricsSummaryAsync(cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpPost]
     [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

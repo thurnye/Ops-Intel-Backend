@@ -39,6 +39,21 @@ public class ShipmentCarrierService : ICarrierService
         };
     }
 
+    public async Task<CarrierMetricsSummaryResponse> GetSummaryAsync(string? search = null, bool? isActive = null, CancellationToken cancellationToken = default)
+    {
+        var carriers = await _carrierRepository.GetPagedAsync(1, int.MaxValue, search, isActive, cancellationToken);
+
+        return new CarrierMetricsSummaryResponse
+        {
+            TotalCarriers = carriers.Count,
+            ActiveCarriers = carriers.Count(carrier => carrier.IsActive),
+            ContactableCarriers = carriers.Count(carrier =>
+                !string.IsNullOrWhiteSpace(carrier.Email) ||
+                !string.IsNullOrWhiteSpace(carrier.Phone)),
+            TotalServices = carriers.Sum(carrier => carrier.Services.Count(service => !service.IsDeleted))
+        };
+    }
+
     public async Task<CarrierResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var carrier = await _carrierRepository.GetByIdWithServicesAsync(id, cancellationToken);

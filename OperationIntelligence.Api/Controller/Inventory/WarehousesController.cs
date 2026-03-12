@@ -36,6 +36,13 @@ public class WarehousesController : BaseApiController
         return OkResponse(result);
     }
 
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetSummary(CancellationToken cancellationToken)
+    {
+        var result = await _warehouseService.GetSummaryAsync(cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateWarehouseRequest request, CancellationToken cancellationToken)
     {

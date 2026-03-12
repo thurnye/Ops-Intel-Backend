@@ -91,12 +91,12 @@ public class ScheduleJobRepository : IScheduleJobRepository
 
         if (startDateUtc.HasValue)
         {
-            query = query.Where(x => x.PlannedEndUtc >= startDateUtc.Value);
+            query = query.Where(x => !x.LatestFinishUtc.HasValue || x.LatestFinishUtc >= startDateUtc.Value);
         }
 
         if (endDateUtc.HasValue)
         {
-            query = query.Where(x => x.PlannedStartUtc <= endDateUtc.Value);
+            query = query.Where(x => !x.EarliestStartUtc.HasValue || x.EarliestStartUtc <= endDateUtc.Value);
         }
 
         if (schedulePlanId.HasValue)

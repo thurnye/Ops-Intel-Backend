@@ -1,4 +1,5 @@
-﻿using OperationIntelligence.DB;
+﻿using Microsoft.EntityFrameworkCore;
+using OperationIntelligence.DB;
 
 namespace OperationIntelligence.Core;
 
@@ -260,6 +261,51 @@ public class OrderService : IOrderService
                 TotalAmount = x.TotalAmount,
                 OrderDateUtc = x.OrderDateUtc
             }).ToList()
+        };
+    }
+
+    public async Task<OrderOverviewMetricsSummaryResponse> GetOverviewMetricsSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var statuses = await _orderRepository.Query()
+            .AsNoTracking()
+            .Where(x => x.IsActive)
+            .Select(x => x.Status)
+            .ToListAsync(cancellationToken);
+
+        return new OrderOverviewMetricsSummaryResponse
+        {
+            TotalOrders = statuses.Count,
+            AwaitingAction = statuses.Count(status => status == OrderStatus.PendingApproval || status == OrderStatus.Approved),
+            Processing = statuses.Count(status => status == OrderStatus.Processing),
+            ShippedOrDelivered = statuses.Count(status => status == OrderStatus.Shipped || status == OrderStatus.Delivered)
+        };
+    }
+
+    public async Task<OrderCustomerMetricsSummaryResponse> GetCustomerMetricsSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var orders = await _orderRepository.Query()
+            .AsNoTracking()
+            .Where(x => x.IsActive)
+            .Select(x => new { x.CustomerName, x.TotalAmount })
+            .ToListAsync(cancellationToken);
+
+        var grouped = orders
+            .GroupBy(order => string.IsNullOrWhiteSpace(order.CustomerName) ? "Walk-in / Internal" : order.CustomerName.Trim(), StringComparer.OrdinalIgnoreCase)
+            .Select(group => new
+            {
+                OrderCount = group.Count(),
+                TotalAmount = group.Sum(order => order.TotalAmount)
+            })
+            .ToList();
+
+        var totalValue = grouped.Sum(group => group.TotalAmount);
+
+        return new OrderCustomerMetricsSummaryResponse
+        {
+            TotalCustomers = grouped.Count,
+            RepeatCustomers = grouped.Count(group => group.OrderCount > 1),
+            TotalValue = totalValue,
+            AverageCustomerValue = grouped.Count == 0 ? 0 : decimal.Round(totalValue / grouped.Count, 2)
         };
     }
 

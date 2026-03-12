@@ -4,6 +4,7 @@ public class ShipmentSummaryResponse
 {
     public int TotalShipments { get; set; }
     public int DraftShipments { get; set; }
+    public int ProcessingShipments { get; set; }
     public int ReadyToDispatchShipments { get; set; }
     public int InTransitShipments { get; set; }
     public int DeliveredShipments { get; set; }
