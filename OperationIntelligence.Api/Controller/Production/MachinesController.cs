@@ -47,6 +47,13 @@ public class MachinesController : BaseApiController
         return CreatedResponse(nameof(GetById), new { id = result.Id }, result);
     }
 
+    [HttpPost("bulk")]
+    public async Task<IActionResult> CreateBulk([FromBody] BulkCreateRequest<CreateMachineRequest> request, CancellationToken cancellationToken = default)
+    {
+        var result = await _machineService.CreateBulkAsync(request, User?.Identity?.Name, cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateMachineRequest request, CancellationToken cancellationToken = default)
     {

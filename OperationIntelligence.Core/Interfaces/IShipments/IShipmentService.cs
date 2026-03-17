@@ -14,6 +14,10 @@ public interface IShipmentService
         CreateShipmentRequest request,
         string? currentUser = null,
         CancellationToken cancellationToken = default);
+    Task<BulkCreateResponse<ShipmentResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateShipmentRequest> request,
+        string? currentUser = null,
+        CancellationToken cancellationToken = default);
 
     Task<ShipmentResponse> UpdateAsync(
         Guid id,

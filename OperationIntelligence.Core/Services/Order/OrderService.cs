@@ -168,6 +168,14 @@ public class OrderService : IOrderService
         };
     }
 
+    public Task<BulkCreateResponse<OrderResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateOrderRequest> request,
+        CancellationToken cancellationToken = default) =>
+        BulkCreateExecutor.ExecuteAsync(
+            request.Items,
+            (item, token) => CreateAsync(item, token),
+            cancellationToken);
+
     public async Task<OrderResponse> UpdateAsync(Guid id, UpdateOrderRequest request, CancellationToken cancellationToken = default)
     {
         var order = await _orderRepository.GetByIdAsync(id, cancellationToken);

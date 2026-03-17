@@ -88,6 +88,15 @@ public class ShipmentCarrierService : ICarrierService
         return MapCarrier(created);
     }
 
+    public Task<BulkCreateResponse<CarrierResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateCarrierRequest> request,
+        string? currentUser = null,
+        CancellationToken cancellationToken = default) =>
+        BulkCreateExecutor.ExecuteAsync(
+            request.Items,
+            (item, token) => CreateAsync(item, currentUser, token),
+            cancellationToken);
+
     public async Task<CarrierResponse> UpdateAsync(Guid id, UpdateCarrierRequest request, string? currentUser = null, CancellationToken cancellationToken = default)
     {
         await _updateCarrierValidator.ValidateAndThrowAsync(request, cancellationToken);

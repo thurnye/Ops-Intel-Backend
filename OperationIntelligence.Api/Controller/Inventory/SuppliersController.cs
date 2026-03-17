@@ -22,6 +22,13 @@ public class SuppliersController : BaseApiController
         return CreatedResponse(nameof(GetById), new { id = result.Id }, result);
     }
 
+    [HttpPost("bulk")]
+    public async Task<IActionResult> CreateBulk([FromBody] BulkCreateRequest<CreateSupplierRequest> request, CancellationToken cancellationToken)
+    {
+        var result = await _supplierService.CreateBulkAsync(request, cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {

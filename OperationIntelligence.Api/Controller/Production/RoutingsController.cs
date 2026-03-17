@@ -47,6 +47,13 @@ public class RoutingsController : BaseApiController
         return CreatedResponse(nameof(GetById), new { id = result.Id }, result);
     }
 
+    [HttpPost("bulk")]
+    public async Task<IActionResult> CreateBulk([FromBody] BulkCreateRequest<CreateRoutingRequest> request, CancellationToken cancellationToken = default)
+    {
+        var result = await _routingService.CreateBulkAsync(request, User?.Identity?.Name, cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpPost("{routingId:guid}/steps")]
     public async Task<IActionResult> AddStep(Guid routingId, [FromBody] CreateRoutingStepRequest request, CancellationToken cancellationToken = default)
     {

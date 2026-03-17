@@ -47,6 +47,13 @@ public class ProductionOrdersController : BaseApiController
         return CreatedResponse(nameof(GetById), new { id = result.Id }, result);
     }
 
+    [HttpPost("bulk")]
+    public async Task<IActionResult> CreateBulk([FromBody] BulkCreateRequest<CreateProductionOrderRequest> request, CancellationToken cancellationToken = default)
+    {
+        var result = await _productionOrderService.CreateBulkAsync(request, User?.Identity?.Name, cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductionOrderRequest request, CancellationToken cancellationToken = default)
     {

@@ -8,6 +8,9 @@ public interface IShiftService
     Task<ShiftResponse> CreateAsync(
         CreateShiftRequest request,
         CancellationToken cancellationToken = default);
+    Task<BulkCreateResponse<ShiftResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateShiftRequest> request,
+        CancellationToken cancellationToken = default);
 
     Task<ShiftResponse> UpdateAsync(
         Guid id,

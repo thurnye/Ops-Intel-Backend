@@ -72,6 +72,14 @@ public class OrdersController : BaseApiController
         return CreatedResponse(nameof(GetById), new { id = result.Id }, result);
     }
 
+    [HttpPost("bulk")]
+    [ProducesResponseType(typeof(BulkCreateResponse<OrderResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> CreateBulk([FromBody] BulkCreateRequest<CreateOrderRequest> request, CancellationToken cancellationToken)
+    {
+        var result = await _orderService.CreateBulkAsync(request, cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(OrderResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

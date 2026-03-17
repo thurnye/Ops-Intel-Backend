@@ -21,6 +21,10 @@ public interface ICarrierService
         CreateCarrierRequest request,
         string? currentUser = null,
         CancellationToken cancellationToken = default);
+    Task<BulkCreateResponse<CarrierResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateCarrierRequest> request,
+        string? currentUser = null,
+        CancellationToken cancellationToken = default);
 
     Task<CarrierResponse> UpdateAsync(
         Guid id,

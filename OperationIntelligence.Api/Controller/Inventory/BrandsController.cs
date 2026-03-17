@@ -22,6 +22,13 @@ public class BrandsController : BaseApiController
         return CreatedResponse(nameof(GetById), new { id = result.Id }, result);
     }
 
+    [HttpPost("bulk")]
+    public async Task<IActionResult> CreateBulk([FromBody] BulkCreateRequest<CreateBrandRequest> request, CancellationToken cancellationToken)
+    {
+        var result = await _brandService.CreateBulkAsync(request, cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {

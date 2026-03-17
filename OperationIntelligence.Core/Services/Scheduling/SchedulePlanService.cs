@@ -48,6 +48,14 @@ public class SchedulePlanService : ISchedulePlanService
         return MapToResponse(created);
     }
 
+    public Task<BulkCreateResponse<SchedulePlanResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateSchedulePlanRequest> request,
+        CancellationToken cancellationToken = default) =>
+        BulkCreateExecutor.ExecuteAsync(
+            request.Items,
+            (item, token) => CreateAsync(item, token),
+            cancellationToken);
+
     public async Task<SchedulePlanResponse> UpdateAsync(Guid id, UpdateSchedulePlanRequest request, CancellationToken cancellationToken = default)
     {
         var entity = await _schedulePlanRepository.GetByIdAsync(id, cancellationToken)

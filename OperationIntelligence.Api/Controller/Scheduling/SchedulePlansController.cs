@@ -29,6 +29,13 @@ public class SchedulePlansController : BaseApiController
         }
     }
 
+    [HttpPost("bulk")]
+    public async Task<IActionResult> CreateBulk([FromBody] BulkCreateRequest<CreateSchedulePlanRequest> request, CancellationToken cancellationToken)
+    {
+        var result = await _schedulePlanService.CreateBulkAsync(request, cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSchedulePlanRequest request, CancellationToken cancellationToken)
     {

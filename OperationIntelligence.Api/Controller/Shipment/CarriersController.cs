@@ -54,6 +54,15 @@ public class CarriersController : BaseApiController
         return CreatedResponse(nameof(GetById), new { id = result.Id }, result);
     }
 
+    [HttpPost("bulk")]
+    public async Task<IActionResult> CreateBulk(
+        [FromBody] BulkCreateRequest<CreateCarrierRequest> request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _carrierService.CreateBulkAsync(request, User?.Identity?.Name, cancellationToken);
+        return OkResponse(result);
+    }
+
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(
         Guid id,

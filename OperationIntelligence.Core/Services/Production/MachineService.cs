@@ -98,6 +98,15 @@ public class MachineService : IMachineService
         return entity.ToResponse();
     }
 
+    public Task<BulkCreateResponse<MachineResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateMachineRequest> request,
+        string? createdBy = null,
+        CancellationToken cancellationToken = default) =>
+        BulkCreateExecutor.ExecuteAsync(
+            request.Items,
+            (item, token) => CreateAsync(item, createdBy, token),
+            cancellationToken);
+
     public async Task<MachineResponse?> UpdateAsync(Guid id, UpdateMachineRequest request, string? updatedBy = null, CancellationToken cancellationToken = default)
     {
         var entity = await _machineRepository.GetByIdAsync(id, cancellationToken);

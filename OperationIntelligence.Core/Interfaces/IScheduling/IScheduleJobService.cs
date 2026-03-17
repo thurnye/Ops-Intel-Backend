@@ -8,6 +8,9 @@ public interface IScheduleJobService
     Task<ScheduleJobResponse> CreateAsync(
         CreateScheduleJobRequest request,
         CancellationToken cancellationToken = default);
+    Task<BulkCreateResponse<ScheduleJobResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateScheduleJobRequest> request,
+        CancellationToken cancellationToken = default);
 
     Task<ScheduleJobResponse> UpdateAsync(
         Guid id,

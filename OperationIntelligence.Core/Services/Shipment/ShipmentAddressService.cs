@@ -98,6 +98,15 @@ public class ShipmentAddressService : IShipmentAddressService
         return Map(entity);
     }
 
+    public Task<BulkCreateResponse<ShipmentAddressResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateShipmentAddressRequest> request,
+        string? currentUser = null,
+        CancellationToken cancellationToken = default) =>
+        BulkCreateExecutor.ExecuteAsync(
+            request.Items,
+            (item, token) => CreateAsync(item, currentUser, token),
+            cancellationToken);
+
     public async Task<ShipmentAddressResponse> UpdateAsync(Guid id, UpdateShipmentAddressRequest request, string? currentUser = null, CancellationToken cancellationToken = default)
     {
         await _updateValidator.ValidateAndThrowAsync(request, cancellationToken);

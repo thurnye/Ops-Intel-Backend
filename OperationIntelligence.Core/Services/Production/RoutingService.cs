@@ -100,6 +100,15 @@ public class RoutingService : IRoutingService
         return created.ToResponse();
     }
 
+    public Task<BulkCreateResponse<RoutingResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateRoutingRequest> request,
+        string? createdBy = null,
+        CancellationToken cancellationToken = default) =>
+        BulkCreateExecutor.ExecuteAsync(
+            request.Items,
+            (item, token) => CreateAsync(item, createdBy, token),
+            cancellationToken);
+
     public async Task<RoutingStepResponse> AddStepAsync(CreateRoutingStepRequest request, string? createdBy = null, CancellationToken cancellationToken = default)
     {
         var routing = await _routingRepository.GetByIdAsync(request.RoutingId, cancellationToken);

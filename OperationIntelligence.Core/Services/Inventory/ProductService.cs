@@ -16,6 +16,61 @@ public class ProductService : IProductService
         CreateProductRequest request,
         CancellationToken cancellationToken = default)
     {
+        return await CreateSingleAsync(request, cancellationToken);
+    }
+
+    public async Task<ProductBulkCreateResponse> CreateBulkAsync(
+        CreateProductBulkRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var results = new List<ProductBulkCreateItemResult>();
+        var seenSkus = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var seenBarcodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var item in request.Items)
+        {
+            try
+            {
+                if (!seenSkus.Add(item.SKU))
+                    throw new InvalidOperationException($"Duplicate SKU in upload payload: {item.SKU}");
+
+                if (!string.IsNullOrWhiteSpace(item.Barcode) && !seenBarcodes.Add(item.Barcode))
+                    throw new InvalidOperationException($"Duplicate barcode in upload payload: {item.Barcode}");
+
+                var createdProduct = await CreateSingleAsync(item, cancellationToken);
+                results.Add(new ProductBulkCreateItemResult
+                {
+                    SourceRowNumber = item.SourceRowNumber,
+                    ClientRowId = item.ClientRowId,
+                    Success = true,
+                    Product = createdProduct
+                });
+            }
+            catch (Exception exception)
+            {
+                results.Add(new ProductBulkCreateItemResult
+                {
+                    SourceRowNumber = item.SourceRowNumber,
+                    ClientRowId = item.ClientRowId,
+                    Success = false,
+                    ErrorMessage = exception.Message
+                });
+            }
+        }
+
+        return new ProductBulkCreateResponse
+        {
+            TotalRequested = request.Items.Count,
+            SuccessCount = results.Count(x => x.Success),
+            FailureCount = results.Count(x => !x.Success),
+            Results = results
+        };
+    }
+
+    private async Task<ProductResponse> CreateSingleAsync(
+        CreateProductRequest request,
+        CancellationToken cancellationToken = default)
+    {
         var isSkuUnique = await _productRepository.IsSkuUniqueAsync(request.SKU, null, cancellationToken);
         if (!isSkuUnique)
             throw new InvalidOperationException(InventoryErrorMessages.ProductSkuAlreadyExists(request.SKU));

@@ -41,6 +41,14 @@ public class WarehouseService : IWarehouseService
         return Map(warehouse);
     }
 
+    public Task<BulkCreateResponse<WarehouseResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateWarehouseRequest> request,
+        CancellationToken cancellationToken = default) =>
+        BulkCreateExecutor.ExecuteAsync(
+            request.Items,
+            (item, token) => CreateAsync(item, token),
+            cancellationToken);
+
     public async Task<WarehouseResponse?> UpdateAsync(UpdateWarehouseRequest request, CancellationToken cancellationToken = default)
     {
         var warehouse = await _warehouseRepository.GetByIdAsync(request.Id, cancellationToken);

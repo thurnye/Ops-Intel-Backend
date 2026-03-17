@@ -39,6 +39,14 @@ public class SupplierService : ISupplierService
         return Map(supplier);
     }
 
+    public Task<BulkCreateResponse<SupplierResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateSupplierRequest> request,
+        CancellationToken cancellationToken = default) =>
+        BulkCreateExecutor.ExecuteAsync(
+            request.Items,
+            (item, token) => CreateAsync(item, token),
+            cancellationToken);
+
     public async Task<SupplierResponse?> UpdateAsync(UpdateSupplierRequest request, CancellationToken cancellationToken = default)
     {
         var supplier = await _supplierRepository.GetByIdAsync(request.Id, cancellationToken);

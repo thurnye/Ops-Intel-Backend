@@ -29,6 +29,14 @@ public class BrandService : IBrandService
         return Map(brand);
     }
 
+    public Task<BulkCreateResponse<BrandResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateBrandRequest> request,
+        CancellationToken cancellationToken = default) =>
+        BulkCreateExecutor.ExecuteAsync(
+            request.Items,
+            (item, token) => CreateAsync(item, token),
+            cancellationToken);
+
     public async Task<BrandResponse?> UpdateAsync(UpdateBrandRequest request, CancellationToken cancellationToken = default)
     {
         var brand = await _brandRepository.GetByIdAsync(request.Id, cancellationToken);

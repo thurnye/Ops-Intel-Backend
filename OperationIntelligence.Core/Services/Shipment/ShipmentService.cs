@@ -185,6 +185,15 @@ public class ShipmentService : IShipmentService
         return MapShipment(created);
     }
 
+    public Task<BulkCreateResponse<ShipmentResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateShipmentRequest> request,
+        string? currentUser = null,
+        CancellationToken cancellationToken = default) =>
+        BulkCreateExecutor.ExecuteAsync(
+            request.Items,
+            (item, token) => CreateAsync(item, currentUser, token),
+            cancellationToken);
+
     public async Task<ShipmentResponse> UpdateAsync(
         Guid id,
         UpdateShipmentRequest request,

@@ -143,6 +143,15 @@ public class ProductionOrderService : IProductionOrderService
         return created.ToResponse();
     }
 
+    public Task<BulkCreateResponse<ProductionOrderResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateProductionOrderRequest> request,
+        string? createdBy = null,
+        CancellationToken cancellationToken = default) =>
+        BulkCreateExecutor.ExecuteAsync(
+            request.Items,
+            (item, token) => CreateAsync(item, createdBy, token),
+            cancellationToken);
+
     public async Task<ProductionOrderResponse?> UpdateAsync(Guid id, UpdateProductionOrderRequest request, string? updatedBy = null, CancellationToken cancellationToken = default)
     {
         var entity = await _productionOrderRepository.GetByIdAsync(id, cancellationToken);

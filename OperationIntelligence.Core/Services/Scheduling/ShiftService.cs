@@ -48,6 +48,14 @@ public class ShiftService : IShiftService
         return MapToResponse(created);
     }
 
+    public Task<BulkCreateResponse<ShiftResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateShiftRequest> request,
+        CancellationToken cancellationToken = default) =>
+        BulkCreateExecutor.ExecuteAsync(
+            request.Items,
+            (item, token) => CreateAsync(item, token),
+            cancellationToken);
+
     public async Task<ShiftResponse> UpdateAsync(Guid id, UpdateShiftRequest request, CancellationToken cancellationToken = default)
     {
         var entity = await _shiftRepository.GetByIdAsync(id, cancellationToken)

@@ -23,6 +23,10 @@ public interface IShipmentAddressService
         CreateShipmentAddressRequest request,
         string? currentUser = null,
         CancellationToken cancellationToken = default);
+    Task<BulkCreateResponse<ShipmentAddressResponse>> CreateBulkAsync(
+        BulkCreateRequest<CreateShipmentAddressRequest> request,
+        string? currentUser = null,
+        CancellationToken cancellationToken = default);
 
     Task<ShipmentAddressResponse> UpdateAsync(
         Guid id,
