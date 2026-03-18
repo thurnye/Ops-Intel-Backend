@@ -5,7 +5,7 @@ namespace OperationIntelligence.Api
     public static class RepositoryRegistrationExtensions
     {
         public static IServiceCollection AddAppRepositories(this IServiceCollection services)
-        {   
+        {
             // Auth
             services.AddScoped<IPlatformUserRepository, PlatformUserRepository>();
             services.AddScoped<IRoleRepository, RoleRepository>();
@@ -90,6 +90,10 @@ namespace OperationIntelligence.Api
             services.AddScoped<IDockAppointmentRepository, DockAppointmentRepository>();
             services.AddScoped<IReturnShipmentRepository, ReturnShipmentRepository>();
             services.AddScoped<IShipmentLookupRepository, ShipmentLookupRepository>();
+
+            // Dashboard
+
+            services.AddScoped<IDashboardReadRepository, DashboardReadRepository>();
 
             return services;
         }

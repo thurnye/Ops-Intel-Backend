@@ -73,6 +73,9 @@ namespace OperationIntelligence.Api
             services.AddScoped<IReturnShipmentService, ReturnShipmentService>();
             services.AddScoped<IShipmentLookupService, ShipmentLookupService>();
 
+            // Dashboard
+            services.AddScoped<IDashboardService, DashboardService>();
+
             services.AddScoped<CacheInvalidationService>();
 
             return services;
