@@ -95,6 +95,27 @@ namespace OperationIntelligence.Api
 
             services.AddScoped<IDashboardReadRepository, DashboardReadRepository>();
 
+
+            // Financial
+            services.AddScoped<IChartOfAccountRepository, ChartOfAccountRepository>();
+            services.AddScoped<IFiscalYearRepository, FiscalYearRepository>();
+            services.AddScoped<IFiscalPeriodRepository, FiscalPeriodRepository>();
+            services.AddScoped<ICostCenterRepository, CostCenterRepository>();
+            services.AddScoped<IJournalEntryRepository, JournalEntryRepository>();
+            services.AddScoped<IJournalLineRepository, JournalLineRepository>();
+            services.AddScoped<IGeneralLedgerEntryRepository, GeneralLedgerEntryRepository>();
+            services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+            services.AddScoped<IInvoiceLineRepository, InvoiceLineRepository>();
+            services.AddScoped<IPaymentRepository, PaymentRepository>();
+            services.AddScoped<IPaymentAllocationRepository, PaymentAllocationRepository>();
+            services.AddScoped<IAccountReceivableRepository, AccountReceivableRepository>();
+            services.AddScoped<IVendorBillRepository, VendorBillRepository>();
+            services.AddScoped<IVendorBillLineRepository, VendorBillLineRepository>();
+            services.AddScoped<IAccountPayableRepository, AccountPayableRepository>();
+            services.AddScoped<IExpenseRepository, ExpenseRepository>();
+            services.AddScoped<IBudgetRepository, BudgetRepository>();
+            services.AddScoped<IBudgetLineRepository, BudgetLineRepository>();
+            services.AddScoped<IFinanceUnitOfWork, FinanceUnitOfWork>();
             return services;
         }
     }

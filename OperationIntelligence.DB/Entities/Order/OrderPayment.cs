@@ -12,7 +12,7 @@ public class OrderPayment : OrderBaseEntity
     public PaymentMethod PaymentMethod { get; set; }
     public PaymentProvider PaymentProvider { get; set; } = PaymentProvider.Manual;
     public PaymentTransactionType TransactionType { get; set; } = PaymentTransactionType.Payment;
-    public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
+    public global::PaymentStatus Status { get; set; } = global::PaymentStatus.Pending;
 
     public decimal Amount { get; set; }
     public decimal FeeAmount { get; set; }

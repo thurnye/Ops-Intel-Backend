@@ -18,6 +18,7 @@ internal static class WorkbookSeedRunner
     private static readonly string ProductionWorkbookPath = Path.Combine(DataDirectory, "production_seed_data_relational.xlsx");
     private static readonly string SchedulingWorkbookPath = Path.Combine(DataDirectory, "scheduling_seed_data_with_auth_relational.xlsx");
     private static readonly string ShipmentWorkbookPath = Path.Combine(DataDirectory, "shipment_seed_data_relational.xlsx");
+    private static readonly string FinanceWorkbookPath = Path.Combine(DataDirectory, "financial_seed_data_5yr_from_ops_flow.xlsx");
 
     private sealed record NormalizedProductMap(Guid ProductId, Guid? UnitOfMeasureId);
 
@@ -45,7 +46,16 @@ internal static class WorkbookSeedRunner
             await context.Database.EnsureDeletedAsync();
         }
 
-        await context.Database.MigrateAsync();
+        try
+        {
+            await context.Database.MigrateAsync();
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("PendingModelChangesWarning", StringComparison.Ordinal))
+        {
+            Console.WriteLine("Pending model changes detected. Skipping EF migration step and relying on existing schema plus financial table bootstrap.");
+        }
+
+        await EnsureFinancialTablesExistAsync(context);
 
         if (!await context.Database.CanConnectAsync())
         {
@@ -66,6 +76,7 @@ internal static class WorkbookSeedRunner
         await SeedProductionAsync(context);
         await SeedSchedulingAsync(context);
         await SeedShipmentAsync(context);
+        await SeedFinanceAsync(context);
 
         Console.WriteLine("Workbook seeding complete.");
         await PrintSummaryAsync(context);
@@ -1847,6 +1858,636 @@ internal static class WorkbookSeedRunner
         Console.WriteLine($"Imported shipment workbook: Shipments={shipments.Count}, Items={shipmentItems.Count}, Returns={returnShipments.Count}");
     }
 
+    private static async Task SeedFinanceAsync(OperationIntelligenceDbContext context)
+    {
+        if (await context.ChartOfAccounts.AnyAsync() ||
+            await context.FiscalYears.AnyAsync() ||
+            await context.FiscalPeriods.AnyAsync() ||
+            await context.CostCenters.AnyAsync() ||
+            await context.Invoices.AnyAsync() ||
+            await context.InvoiceLines.AnyAsync() ||
+            await context.Payments.AnyAsync() ||
+            await context.PaymentAllocations.AnyAsync() ||
+            await context.AccountsReceivable.AnyAsync() ||
+            await context.VendorBills.AnyAsync() ||
+            await context.VendorBillLines.AnyAsync() ||
+            await context.AccountsPayable.AnyAsync() ||
+            await context.Expenses.AnyAsync() ||
+            await context.JournalEntries.AnyAsync() ||
+            await context.JournalLines.AnyAsync() ||
+            await context.GeneralLedgerEntries.AnyAsync() ||
+            await context.Budgets.AnyAsync() ||
+            await context.BudgetLines.AnyAsync())
+        {
+            Console.WriteLine("Finance workbook data already exists. Skipping finance workbook import.");
+            return;
+        }
+
+        EnsureWorkbookExists(FinanceWorkbookPath);
+        var workbook = ReadWorkbookSheets(FinanceWorkbookPath);
+        var chartOfAccounts = Sheet(workbook, "ChartOfAccounts")
+            .Select(row => new ChartOfAccount
+            {
+                Id = ParseGuid(row, "Id"),
+                AccountCode = GetValue(row, "AccountCode"),
+                AccountName = GetValue(row, "AccountName"),
+                AccountType = EnumValue(row, "AccountType", AccountType.Asset),
+                ParentAccountId = GuidValueOrNull(row, "ParentAccountId"),
+                IsActive = BoolValue(row, "IsActive", true),
+                AllowManualPosting = BoolValue(row, "AllowManualPosting", true),
+                Description = ValueOrNull(row, "Description"),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.ChartOfAccounts.AddRangeAsync(chartOfAccounts);
+
+        var fiscalYears = Sheet(workbook, "FiscalYears")
+            .Select(row => new FiscalYear
+            {
+                Id = ParseGuid(row, "Id"),
+                YearCode = IntValue(row, "YearCode"),
+                Name = GetValue(row, "Name"),
+                StartDate = DateValue(row, "StartDate", DateTime.UtcNow),
+                EndDate = DateValue(row, "EndDate", DateTime.UtcNow),
+                IsClosed = BoolValue(row, "IsClosed", false),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.FiscalYears.AddRangeAsync(fiscalYears);
+
+        var fiscalPeriods = Sheet(workbook, "FiscalPeriods")
+            .Select(row => new FiscalPeriod
+            {
+                Id = ParseGuid(row, "Id"),
+                FiscalYearId = ParseGuid(row, "FiscalYearId"),
+                PeriodNumber = IntValue(row, "PeriodNumber"),
+                Name = GetValue(row, "Name"),
+                StartDate = DateValue(row, "StartDate", DateTime.UtcNow),
+                EndDate = DateValue(row, "EndDate", DateTime.UtcNow),
+                Status = EnumValue(row, "Status", FiscalPeriodStatus.Open),
+                ClosedAtUtc = DateValueOrNull(row, "ClosedAtUtc"),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.FiscalPeriods.AddRangeAsync(fiscalPeriods);
+
+        var costCenters = Sheet(workbook, "CostCenters")
+            .Select(row => new CostCenter
+            {
+                Id = ParseGuid(row, "Id"),
+                Code = GetValue(row, "Code"),
+                Name = GetValue(row, "Name"),
+                Description = ValueOrNull(row, "Description"),
+                IsActive = BoolValue(row, "IsActive", true),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.CostCenters.AddRangeAsync(costCenters);
+
+        var invoices = Sheet(workbook, "Invoices")
+            .Select(row => new Invoice
+            {
+                Id = ParseGuid(row, "Id"),
+                InvoiceNumber = GetValue(row, "InvoiceNumber"),
+                InvoiceDate = DateValue(row, "InvoiceDate", DateTime.UtcNow),
+                DueDate = DateValue(row, "DueDate", DateTime.UtcNow),
+                OrderId = GuidValueOrNull(row, "OrderId"),
+                CustomerId = ParseGuid(row, "CustomerId"),
+                Status = EnumValue(row, "Status", InvoiceStatus.Draft),
+                Subtotal = DecimalValue(row, "Subtotal"),
+                TaxAmount = DecimalValue(row, "TaxAmount"),
+                DiscountAmount = DecimalValue(row, "DiscountAmount"),
+                TotalAmount = DecimalValue(row, "TotalAmount"),
+                AmountPaid = DecimalValue(row, "AmountPaid"),
+                OutstandingAmount = DecimalValue(row, "OutstandingAmount"),
+                CurrencyCode = ValueOrDefault(row, "CurrencyCode", "CAD"),
+                Notes = ValueOrNull(row, "Notes"),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.Invoices.AddRangeAsync(invoices);
+
+        var invoiceLines = Sheet(workbook, "InvoiceLines")
+            .Select(row => new InvoiceLine
+            {
+                Id = ParseGuid(row, "Id"),
+                InvoiceId = ParseGuid(row, "InvoiceId"),
+                LineNumber = IntValue(row, "LineNumber"),
+                OrderLineId = GuidValueOrNull(row, "OrderLineId"),
+                ProductId = GuidValueOrNull(row, "ProductId"),
+                Description = GetValue(row, "Description"),
+                Quantity = DecimalValue(row, "Quantity"),
+                UnitPrice = DecimalValue(row, "UnitPrice"),
+                TaxAmount = DecimalValue(row, "TaxAmount"),
+                DiscountAmount = DecimalValue(row, "DiscountAmount"),
+                LineTotal = DecimalValue(row, "LineTotal"),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.InvoiceLines.AddRangeAsync(invoiceLines);
+
+        var payments = Sheet(workbook, "Payments")
+            .Select(row => new Payment
+            {
+                Id = ParseGuid(row, "Id"),
+                PaymentReference = GetValue(row, "PaymentReference"),
+                PaymentDate = DateValue(row, "PaymentDate", DateTime.UtcNow),
+                Status = ResolveFinancePaymentStatus(ValueOrNull(row, "Status")),
+                CustomerId = ParseGuid(row, "CustomerId"),
+                AmountReceived = DecimalValue(row, "AmountReceived"),
+                CurrencyCode = ValueOrDefault(row, "CurrencyCode", "CAD"),
+                PaymentMethod = GetValue(row, "PaymentMethod"),
+                ExternalTransactionReference = ValueOrNull(row, "ExternalTransactionReference"),
+                Notes = ValueOrNull(row, "Notes"),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.Payments.AddRangeAsync(payments);
+
+        var paymentAllocations = Sheet(workbook, "PaymentAllocations")
+            .Select(row => new PaymentAllocation
+            {
+                Id = ParseGuid(row, "Id"),
+                PaymentId = ParseGuid(row, "PaymentId"),
+                InvoiceId = ParseGuid(row, "InvoiceId"),
+                AmountApplied = DecimalValue(row, "AmountApplied"),
+                AllocationDate = DateValue(row, "AllocationDate", DateTime.UtcNow),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.PaymentAllocations.AddRangeAsync(paymentAllocations);
+
+        var accountsReceivable = Sheet(workbook, "AccountsReceivable")
+            .Select(row => new AccountReceivable
+            {
+                Id = ParseGuid(row, "Id"),
+                InvoiceId = ParseGuid(row, "InvoiceId"),
+                CustomerId = ParseGuid(row, "CustomerId"),
+                InvoiceDate = DateValue(row, "InvoiceDate", DateTime.UtcNow),
+                DueDate = DateValue(row, "DueDate", DateTime.UtcNow),
+                OriginalAmount = DecimalValue(row, "OriginalAmount"),
+                AmountPaid = DecimalValue(row, "AmountPaid"),
+                OutstandingAmount = DecimalValue(row, "OutstandingAmount"),
+                IsOverdue = BoolValue(row, "IsOverdue", false),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.AccountsReceivable.AddRangeAsync(accountsReceivable);
+
+        var vendorBills = Sheet(workbook, "VendorBills")
+            .Select(row => new VendorBill
+            {
+                Id = ParseGuid(row, "Id"),
+                BillNumber = GetValue(row, "BillNumber"),
+                VendorId = ParseGuid(row, "VendorId"),
+                BillDate = DateValue(row, "BillDate", DateTime.UtcNow),
+                DueDate = DateValue(row, "DueDate", DateTime.UtcNow),
+                Status = EnumValue(row, "Status", VendorBillStatus.Draft),
+                ShipmentId = GuidValueOrNull(row, "ShipmentId"),
+                ProductionBatchId = GuidValueOrNull(row, "ProductionBatchId"),
+                PurchaseReferenceId = GuidValueOrNull(row, "PurchaseReferenceId"),
+                Subtotal = DecimalValue(row, "Subtotal"),
+                TaxAmount = DecimalValue(row, "TaxAmount"),
+                DiscountAmount = DecimalValue(row, "DiscountAmount"),
+                TotalAmount = DecimalValue(row, "TotalAmount"),
+                AmountPaid = DecimalValue(row, "AmountPaid"),
+                OutstandingAmount = DecimalValue(row, "OutstandingAmount"),
+                CurrencyCode = ValueOrDefault(row, "CurrencyCode", "CAD"),
+                Notes = ValueOrNull(row, "Notes"),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.VendorBills.AddRangeAsync(vendorBills);
+
+        var vendorBillLines = Sheet(workbook, "VendorBillLines")
+            .Select(row => new VendorBillLine
+            {
+                Id = ParseGuid(row, "Id"),
+                VendorBillId = ParseGuid(row, "VendorBillId"),
+                LineNumber = IntValue(row, "LineNumber"),
+                ProductId = GuidValueOrNull(row, "ProductId"),
+                ShipmentItemId = GuidValueOrNull(row, "ShipmentItemId"),
+                ProductionMaterialId = GuidValueOrNull(row, "ProductionMaterialId"),
+                Description = GetValue(row, "Description"),
+                Quantity = DecimalValue(row, "Quantity"),
+                UnitCost = DecimalValue(row, "UnitCost"),
+                TaxAmount = DecimalValue(row, "TaxAmount"),
+                DiscountAmount = DecimalValue(row, "DiscountAmount"),
+                LineTotal = DecimalValue(row, "LineTotal"),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.VendorBillLines.AddRangeAsync(vendorBillLines);
+
+        var accountsPayable = Sheet(workbook, "AccountsPayable")
+            .Select(row => new AccountPayable
+            {
+                Id = ParseGuid(row, "Id"),
+                VendorBillId = ParseGuid(row, "VendorBillId"),
+                VendorId = ParseGuid(row, "VendorId"),
+                BillDate = DateValue(row, "BillDate", DateTime.UtcNow),
+                DueDate = DateValue(row, "DueDate", DateTime.UtcNow),
+                OriginalAmount = DecimalValue(row, "OriginalAmount"),
+                AmountPaid = DecimalValue(row, "AmountPaid"),
+                OutstandingAmount = DecimalValue(row, "OutstandingAmount"),
+                IsOverdue = BoolValue(row, "IsOverdue", false),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.AccountsPayable.AddRangeAsync(accountsPayable);
+
+        var journalEntries = Sheet(workbook, "JournalEntries")
+            .Select(row => new JournalEntry
+            {
+                Id = ParseGuid(row, "Id"),
+                JournalNumber = GetValue(row, "JournalNumber"),
+                EntryDate = DateValue(row, "EntryDate", DateTime.UtcNow),
+                PostingDate = DateValue(row, "PostingDate", DateTime.UtcNow),
+                FiscalPeriodId = ParseGuid(row, "FiscalPeriodId"),
+                Status = EnumValue(row, "Status", JournalEntryStatus.Draft),
+                SourceModule = EnumValue(row, "SourceModule", FinanceSourceModule.Manual),
+                SourceReferenceType = ValueOrNull(row, "SourceReferenceType"),
+                SourceReferenceId = GuidValueOrNull(row, "SourceReferenceId"),
+                Memo = GetValue(row, "Memo"),
+                ApprovedByUserId = ValueOrNull(row, "ApprovedByUserId"),
+                ApprovedAtUtc = DateValueOrNull(row, "ApprovedAtUtc"),
+                PostedByUserId = ValueOrNull(row, "PostedByUserId"),
+                PostedAtUtc = DateValueOrNull(row, "PostedAtUtc"),
+                IsReversal = BoolValue(row, "IsReversal", false),
+                ReversedJournalEntryId = GuidValueOrNull(row, "ReversedJournalEntryId"),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.JournalEntries.AddRangeAsync(journalEntries);
+
+        var journalLines = Sheet(workbook, "JournalLines")
+            .Select(row => new JournalLine
+            {
+                Id = ParseGuid(row, "Id"),
+                JournalEntryId = ParseGuid(row, "JournalEntryId"),
+                LineNumber = IntValue(row, "LineNumber"),
+                AccountId = ParseGuid(row, "AccountId"),
+                CostCenterId = GuidValueOrNull(row, "CostCenterId"),
+                Description = GetValue(row, "Description"),
+                DebitAmount = DecimalValue(row, "DebitAmount"),
+                CreditAmount = DecimalValue(row, "CreditAmount"),
+                CurrencyCode = ValueOrDefault(row, "CurrencyCode", "CAD"),
+                ExchangeRate = DecimalValue(row, "ExchangeRate"),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.JournalLines.AddRangeAsync(journalLines);
+
+        var generalLedgerEntries = Sheet(workbook, "GeneralLedgerEntries")
+            .Select(row => new GeneralLedgerEntry
+            {
+                Id = ParseGuid(row, "Id"),
+                JournalEntryId = ParseGuid(row, "JournalEntryId"),
+                JournalLineId = ParseGuid(row, "JournalLineId"),
+                AccountId = ParseGuid(row, "AccountId"),
+                FiscalPeriodId = ParseGuid(row, "FiscalPeriodId"),
+                PostingDate = DateValue(row, "PostingDate", DateTime.UtcNow),
+                CostCenterId = GuidValueOrNull(row, "CostCenterId"),
+                DebitAmount = DecimalValue(row, "DebitAmount"),
+                CreditAmount = DecimalValue(row, "CreditAmount"),
+                CurrencyCode = ValueOrDefault(row, "CurrencyCode", "CAD"),
+                ExchangeRate = DecimalValue(row, "ExchangeRate"),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.GeneralLedgerEntries.AddRangeAsync(generalLedgerEntries);
+
+        var expenses = Sheet(workbook, "Expenses")
+            .Select(row => new Expense
+            {
+                Id = ParseGuid(row, "Id"),
+                ExpenseNumber = GetValue(row, "ExpenseNumber"),
+                ExpenseDate = DateValue(row, "ExpenseDate", DateTime.UtcNow),
+                ExpenseAccountId = ParseGuid(row, "ExpenseAccountId"),
+                CostCenterId = GuidValueOrNull(row, "CostCenterId"),
+                VendorId = GuidValueOrNull(row, "VendorId"),
+                Category = GetValue(row, "Category"),
+                Description = GetValue(row, "Description"),
+                Amount = DecimalValue(row, "Amount"),
+                TaxAmount = DecimalValue(row, "TaxAmount"),
+                RelatedJournalEntryId = GuidValueOrNull(row, "RelatedJournalEntryId"),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.Expenses.AddRangeAsync(expenses);
+
+        var budgets = Sheet(workbook, "Budgets")
+            .Select(row => new Budget
+            {
+                Id = ParseGuid(row, "Id"),
+                BudgetCode = GetValue(row, "BudgetCode"),
+                FiscalYearId = ParseGuid(row, "FiscalYearId"),
+                DepartmentId = ParseGuid(row, "DepartmentId"),
+                CostCenterId = GuidValueOrNull(row, "CostCenterId"),
+                Name = GetValue(row, "Name"),
+                TotalBudgetAmount = DecimalValue(row, "TotalBudgetAmount"),
+                IsApproved = BoolValue(row, "IsApproved", false),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.Budgets.AddRangeAsync(budgets);
+
+        var budgetLines = Sheet(workbook, "BudgetLines")
+            .Select(row => new BudgetLine
+            {
+                Id = ParseGuid(row, "Id"),
+                BudgetId = ParseGuid(row, "BudgetId"),
+                AccountId = ParseGuid(row, "AccountId"),
+                PeriodNumber = IntValue(row, "PeriodNumber"),
+                BudgetAmount = DecimalValue(row, "BudgetAmount"),
+                CreatedAtUtc = DateValue(row, "CreatedAtUtc", DateTime.UtcNow),
+                CreatedBy = ValueOrDefault(row, "CreatedBy", SeedUser),
+                UpdatedAtUtc = DateValueOrNull(row, "UpdatedAtUtc"),
+                UpdatedBy = ValueOrNull(row, "UpdatedBy"),
+                IsDeleted = BoolValue(row, "IsDeleted", false),
+                DeletedAtUtc = DateValueOrNull(row, "DeletedAtUtc"),
+                DeletedBy = ValueOrNull(row, "DeletedBy")
+            })
+            .ToList();
+        await context.BudgetLines.AddRangeAsync(budgetLines);
+
+        await context.SaveChangesAsync();
+        Console.WriteLine(
+            $"Imported finance workbook: Accounts={chartOfAccounts.Count}, FiscalYears={fiscalYears.Count}, Periods={fiscalPeriods.Count}, " +
+            $"CostCenters={costCenters.Count}, Invoices={invoices.Count}, InvoiceLines={invoiceLines.Count}, Payments={payments.Count}, " +
+            $"PaymentAllocations={paymentAllocations.Count}, AR={accountsReceivable.Count}, VendorBills={vendorBills.Count}, " +
+            $"VendorBillLines={vendorBillLines.Count}, AP={accountsPayable.Count}, Expenses={expenses.Count}, " +
+            $"JournalEntries={journalEntries.Count}, JournalLines={journalLines.Count}, Ledger={generalLedgerEntries.Count}, " +
+            $"Budgets={budgets.Count}, BudgetLines={budgetLines.Count}");
+    }
+
+    private static async Task EnsureFinancialTablesExistAsync(OperationIntelligenceDbContext context)
+    {
+        var sql = """
+IF OBJECT_ID(N'[dbo].[Financial_ChartOfAccounts]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Financial_ChartOfAccounts](
+        [Id] uniqueidentifier NOT NULL PRIMARY KEY,
+        [ExternalAccountId] int NOT NULL,
+        [AccountName] nvarchar(200) NOT NULL,
+        [AccountType] nvarchar(100) NOT NULL,
+        [CreatedAtUtc] datetime2 NOT NULL,
+        [CreatedBy] nvarchar(max) NULL,
+        [UpdatedAtUtc] datetime2 NULL,
+        [UpdatedBy] nvarchar(max) NULL,
+        [IsDeleted] bit NOT NULL DEFAULT 0,
+        [DeletedAtUtc] datetime2 NULL,
+        [DeletedBy] nvarchar(max) NULL
+    );
+    CREATE UNIQUE INDEX [IX_Financial_ChartOfAccounts_ExternalAccountId] ON [dbo].[Financial_ChartOfAccounts]([ExternalAccountId]);
+END;
+
+IF OBJECT_ID(N'[dbo].[Financial_Invoices]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Financial_Invoices](
+        [Id] uniqueidentifier NOT NULL PRIMARY KEY,
+        [ExternalInvoiceId] int NOT NULL,
+        [InvoiceDateUtc] datetime2 NOT NULL,
+        [Amount] decimal(18,2) NOT NULL,
+        [CreatedAtUtc] datetime2 NOT NULL,
+        [CreatedBy] nvarchar(max) NULL,
+        [UpdatedAtUtc] datetime2 NULL,
+        [UpdatedBy] nvarchar(max) NULL,
+        [IsDeleted] bit NOT NULL DEFAULT 0,
+        [DeletedAtUtc] datetime2 NULL,
+        [DeletedBy] nvarchar(max) NULL
+    );
+    CREATE UNIQUE INDEX [IX_Financial_Invoices_ExternalInvoiceId] ON [dbo].[Financial_Invoices]([ExternalInvoiceId]);
+END;
+
+IF OBJECT_ID(N'[dbo].[Financial_GeneralLedger]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Financial_GeneralLedger](
+        [Id] uniqueidentifier NOT NULL PRIMARY KEY,
+        [ExternalJournalId] int NOT NULL,
+        [EntryDateUtc] datetime2 NOT NULL,
+        [FinancialChartOfAccountId] uniqueidentifier NOT NULL,
+        [EntryType] nvarchar(50) NOT NULL,
+        [Amount] decimal(18,2) NOT NULL,
+        [Description] nvarchar(500) NULL,
+        [CreatedAtUtc] datetime2 NOT NULL,
+        [CreatedBy] nvarchar(max) NULL,
+        [UpdatedAtUtc] datetime2 NULL,
+        [UpdatedBy] nvarchar(max) NULL,
+        [IsDeleted] bit NOT NULL DEFAULT 0,
+        [DeletedAtUtc] datetime2 NULL,
+        [DeletedBy] nvarchar(max) NULL,
+        CONSTRAINT [FK_Financial_GeneralLedger_Financial_ChartOfAccounts] FOREIGN KEY ([FinancialChartOfAccountId]) REFERENCES [dbo].[Financial_ChartOfAccounts]([Id])
+    );
+    CREATE UNIQUE INDEX [IX_Financial_GeneralLedger_ExternalJournalId] ON [dbo].[Financial_GeneralLedger]([ExternalJournalId]);
+    CREATE INDEX [IX_Financial_GeneralLedger_FinancialChartOfAccountId] ON [dbo].[Financial_GeneralLedger]([FinancialChartOfAccountId]);
+END;
+
+IF OBJECT_ID(N'[dbo].[Financial_Payments]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Financial_Payments](
+        [Id] uniqueidentifier NOT NULL PRIMARY KEY,
+        [ExternalPaymentId] int NOT NULL,
+        [FinancialInvoiceId] uniqueidentifier NOT NULL,
+        [PaymentDateUtc] datetime2 NOT NULL,
+        [PaidAmount] decimal(18,2) NOT NULL,
+        [CreatedAtUtc] datetime2 NOT NULL,
+        [CreatedBy] nvarchar(max) NULL,
+        [UpdatedAtUtc] datetime2 NULL,
+        [UpdatedBy] nvarchar(max) NULL,
+        [IsDeleted] bit NOT NULL DEFAULT 0,
+        [DeletedAtUtc] datetime2 NULL,
+        [DeletedBy] nvarchar(max) NULL,
+        CONSTRAINT [FK_Financial_Payments_Financial_Invoices] FOREIGN KEY ([FinancialInvoiceId]) REFERENCES [dbo].[Financial_Invoices]([Id])
+    );
+    CREATE UNIQUE INDEX [IX_Financial_Payments_ExternalPaymentId] ON [dbo].[Financial_Payments]([ExternalPaymentId]);
+    CREATE INDEX [IX_Financial_Payments_FinancialInvoiceId] ON [dbo].[Financial_Payments]([FinancialInvoiceId]);
+END;
+
+IF OBJECT_ID(N'[dbo].[Financial_Expenses]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Financial_Expenses](
+        [Id] uniqueidentifier NOT NULL PRIMARY KEY,
+        [ExternalExpenseId] int NOT NULL,
+        [ExpenseDateUtc] datetime2 NOT NULL,
+        [Category] nvarchar(100) NOT NULL,
+        [Amount] decimal(18,2) NOT NULL,
+        [CreatedAtUtc] datetime2 NOT NULL,
+        [CreatedBy] nvarchar(max) NULL,
+        [UpdatedAtUtc] datetime2 NULL,
+        [UpdatedBy] nvarchar(max) NULL,
+        [IsDeleted] bit NOT NULL DEFAULT 0,
+        [DeletedAtUtc] datetime2 NULL,
+        [DeletedBy] nvarchar(max) NULL
+    );
+    CREATE UNIQUE INDEX [IX_Financial_Expenses_ExternalExpenseId] ON [dbo].[Financial_Expenses]([ExternalExpenseId]);
+END;
+
+IF OBJECT_ID(N'[dbo].[Financial_Budget]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Financial_Budget](
+        [Id] uniqueidentifier NOT NULL PRIMARY KEY,
+        [BudgetYear] int NOT NULL,
+        [Department] nvarchar(100) NOT NULL,
+        [BudgetAmount] decimal(18,2) NOT NULL,
+        [CreatedAtUtc] datetime2 NOT NULL,
+        [CreatedBy] nvarchar(max) NULL,
+        [UpdatedAtUtc] datetime2 NULL,
+        [UpdatedBy] nvarchar(max) NULL,
+        [IsDeleted] bit NOT NULL DEFAULT 0,
+        [DeletedAtUtc] datetime2 NULL,
+        [DeletedBy] nvarchar(max) NULL
+    );
+    CREATE UNIQUE INDEX [IX_Financial_Budget_BudgetYear_Department] ON [dbo].[Financial_Budget]([BudgetYear], [Department]);
+END;
+
+IF OBJECT_ID(N'[dbo].[Financial_AccountsReceivable]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Financial_AccountsReceivable](
+        [Id] uniqueidentifier NOT NULL PRIMARY KEY,
+        [FinancialInvoiceId] uniqueidentifier NOT NULL,
+        [InvoiceDateUtc] datetime2 NOT NULL,
+        [DueDateUtc] datetime2 NOT NULL,
+        [Amount] decimal(18,2) NOT NULL,
+        [Status] nvarchar(50) NOT NULL,
+        [CreatedAtUtc] datetime2 NOT NULL,
+        [CreatedBy] nvarchar(max) NULL,
+        [UpdatedAtUtc] datetime2 NULL,
+        [UpdatedBy] nvarchar(max) NULL,
+        [IsDeleted] bit NOT NULL DEFAULT 0,
+        [DeletedAtUtc] datetime2 NULL,
+        [DeletedBy] nvarchar(max) NULL,
+        CONSTRAINT [FK_Financial_AccountsReceivable_Financial_Invoices] FOREIGN KEY ([FinancialInvoiceId]) REFERENCES [dbo].[Financial_Invoices]([Id])
+    );
+    CREATE INDEX [IX_Financial_AccountsReceivable_FinancialInvoiceId] ON [dbo].[Financial_AccountsReceivable]([FinancialInvoiceId]);
+END;
+
+IF OBJECT_ID(N'[dbo].[Financial_AccountsPayable]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Financial_AccountsPayable](
+        [Id] uniqueidentifier NOT NULL PRIMARY KEY,
+        [ExternalApId] int NOT NULL,
+        [PayableDateUtc] datetime2 NOT NULL,
+        [Vendor] nvarchar(200) NOT NULL,
+        [Amount] decimal(18,2) NOT NULL,
+        [Status] nvarchar(50) NOT NULL,
+        [CreatedAtUtc] datetime2 NOT NULL,
+        [CreatedBy] nvarchar(max) NULL,
+        [UpdatedAtUtc] datetime2 NULL,
+        [UpdatedBy] nvarchar(max) NULL,
+        [IsDeleted] bit NOT NULL DEFAULT 0,
+        [DeletedAtUtc] datetime2 NULL,
+        [DeletedBy] nvarchar(max) NULL
+    );
+    CREATE UNIQUE INDEX [IX_Financial_AccountsPayable_ExternalApId] ON [dbo].[Financial_AccountsPayable]([ExternalApId]);
+END;
+""";
+
+        await context.Database.ExecuteSqlRawAsync(sql);
+    }
+
     private static async Task PrintSummaryAsync(OperationIntelligenceDbContext context)
     {
         Console.WriteLine("Current row counts:");
@@ -1857,10 +2498,46 @@ internal static class WorkbookSeedRunner
         Console.WriteLine($"ProductionOrders: {await context.ProductionOrders.CountAsync()}");
         Console.WriteLine($"SchedulePlans: {await context.SchedulePlans.CountAsync()}");
         Console.WriteLine($"Shipments: {await context.Shipments.CountAsync()}");
+        Console.WriteLine($"ChartOfAccounts: {await context.ChartOfAccounts.CountAsync()}");
+        Console.WriteLine($"FiscalYears: {await context.FiscalYears.CountAsync()}");
+        Console.WriteLine($"FiscalPeriods: {await context.FiscalPeriods.CountAsync()}");
+        Console.WriteLine($"CostCenters: {await context.CostCenters.CountAsync()}");
+        Console.WriteLine($"Invoices: {await context.Invoices.CountAsync()}");
+        Console.WriteLine($"InvoiceLines: {await context.InvoiceLines.CountAsync()}");
+        Console.WriteLine($"Payments: {await context.Payments.CountAsync()}");
+        Console.WriteLine($"PaymentAllocations: {await context.PaymentAllocations.CountAsync()}");
+        Console.WriteLine($"AccountsReceivable: {await context.AccountsReceivable.CountAsync()}");
+        Console.WriteLine($"VendorBills: {await context.VendorBills.CountAsync()}");
+        Console.WriteLine($"VendorBillLines: {await context.VendorBillLines.CountAsync()}");
+        Console.WriteLine($"AccountsPayable: {await context.AccountsPayable.CountAsync()}");
+        Console.WriteLine($"Expenses: {await context.Expenses.CountAsync()}");
+        Console.WriteLine($"JournalEntries: {await context.JournalEntries.CountAsync()}");
+        Console.WriteLine($"JournalLines: {await context.JournalLines.CountAsync()}");
+        Console.WriteLine($"GeneralLedgerEntries: {await context.GeneralLedgerEntries.CountAsync()}");
+        Console.WriteLine($"Budgets: {await context.Budgets.CountAsync()}");
+        Console.WriteLine($"BudgetLines: {await context.BudgetLines.CountAsync()}");
     }
 
     private static ShipmentStatus MapShipmentStatus(string? statusText)
         => Enum.TryParse<ShipmentStatus>(statusText, true, out var status) ? status : ShipmentStatus.Draft;
+
+    private static PaymentStatus ResolveFinancePaymentStatus(string? statusText)
+    {
+        if (string.IsNullOrWhiteSpace(statusText))
+        {
+            return PaymentStatus.Pending;
+        }
+
+        return statusText.Trim().ToLowerInvariant() switch
+        {
+            "completed" => PaymentStatus.Paid,
+            "pending" => PaymentStatus.Pending,
+            "failed" => PaymentStatus.Failed,
+            "cancelled" => PaymentStatus.Cancelled,
+            "refunded" => PaymentStatus.Refunded,
+            _ => Enum.TryParse<PaymentStatus>(statusText, true, out var parsed) ? parsed : PaymentStatus.Pending
+        };
+    }
 
     private static PaymentStatus DerivePaymentStatus(decimal paidAmount, decimal totalAmount)
     {

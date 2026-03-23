@@ -1,4 +1,6 @@
-﻿namespace OperationIntelligence.Core;
+﻿using OrderPaymentStatus = global::PaymentStatus;
+
+namespace OperationIntelligence.Core;
 
 public class OrderPaymentResponse
 {
@@ -8,7 +10,7 @@ public class OrderPaymentResponse
     public PaymentMethod PaymentMethod { get; set; }
     public PaymentProvider PaymentProvider { get; set; }
     public PaymentTransactionType TransactionType { get; set; }
-    public PaymentStatus Status { get; set; }
+    public OrderPaymentStatus Status { get; set; }
     public decimal Amount { get; set; }
     public decimal FeeAmount { get; set; }
     public decimal NetAmount { get; set; }

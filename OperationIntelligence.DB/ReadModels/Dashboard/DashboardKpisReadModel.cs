@@ -9,3 +9,4 @@ public class DashboardKpisReadModel
     public int ShipmentsPending { get; set; }
     public int CriticalAlerts { get; set; }
 }
+

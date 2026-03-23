@@ -67,4 +67,5 @@ public class ShipmentAnalyticsReadModel
 {
     public List<MultiSeriesPointReadModel> OnTimeVsDelayedTrend { get; set; } = new();
     public List<PieSliceReadModel> ShipmentStatusDistribution { get; set; } = new();
+   
 }

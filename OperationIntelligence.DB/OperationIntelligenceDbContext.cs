@@ -52,6 +52,28 @@ namespace OperationIntelligence.DB
         public DbSet<OrderStatusHistory> OrderStatusHistories => Set<OrderStatusHistory>();
         public DbSet<OrderPayment> OrderPayments => Set<OrderPayment>();
 
+        // =========================
+        // Financial DbSets
+        // =========================
+        public DbSet<ChartOfAccount> ChartOfAccounts => Set<ChartOfAccount>();
+        public DbSet<FiscalYear> FiscalYears => Set<FiscalYear>();
+        public DbSet<FiscalPeriod> FiscalPeriods => Set<FiscalPeriod>();
+        public DbSet<CostCenter> CostCenters => Set<CostCenter>();
+        public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
+        public DbSet<JournalLine> JournalLines => Set<JournalLine>();
+        public DbSet<GeneralLedgerEntry> GeneralLedgerEntries => Set<GeneralLedgerEntry>();
+        public DbSet<Invoice> Invoices => Set<Invoice>();
+        public DbSet<InvoiceLine> InvoiceLines => Set<InvoiceLine>();
+        public DbSet<Payment> Payments => Set<Payment>();
+        public DbSet<PaymentAllocation> PaymentAllocations => Set<PaymentAllocation>();
+        public DbSet<AccountReceivable> AccountsReceivable => Set<AccountReceivable>();
+        public DbSet<VendorBill> VendorBills => Set<VendorBill>();
+        public DbSet<VendorBillLine> VendorBillLines => Set<VendorBillLine>();
+        public DbSet<AccountPayable> AccountsPayable => Set<AccountPayable>();
+        public DbSet<Expense> Expenses => Set<Expense>();
+        public DbSet<Budget> Budgets => Set<Budget>();
+        public DbSet<BudgetLine> BudgetLines => Set<BudgetLine>();
+
 
         // =========================
         // Production DbSets
@@ -120,37 +142,7 @@ namespace OperationIntelligence.DB
         public DbSet<ReturnShipmentItem> ReturnShipmentItems => Set<ReturnShipmentItem>();
         public DbSet<CustomsDocument> CustomsDocuments => Set<CustomsDocument>();
 
-        // protected override void OnModelCreating(ModelBuilder modelBuilder)
-        // {
-        //     // Auth
-        //     modelBuilder.ApplyConfiguration(new PlatformUserConfiguration());
-        //     modelBuilder.ApplyConfiguration(new RefreshTokenConfiguration());
 
-
-        //     // Inventory
-        //     modelBuilder.ApplyConfiguration(new ProductConfiguration());
-        //     modelBuilder.ApplyConfiguration(new ProductImageConfiguration());
-        //     modelBuilder.ApplyConfiguration(new InventoryStockConfiguration());
-        //     modelBuilder.ApplyConfiguration(new StockMovementConfiguration());
-        //     modelBuilder.ApplyConfiguration(new CategoryConfiguration());
-        //     modelBuilder.ApplyConfiguration(new BrandConfiguration());
-        //     modelBuilder.ApplyConfiguration(new UnitOfMeasureConfiguration());
-        //     modelBuilder.ApplyConfiguration(new WarehouseConfiguration());
-        //     modelBuilder.ApplyConfiguration(new SupplierConfiguration());
-        //     modelBuilder.ApplyConfiguration(new ProductSupplierConfiguration());
-
-        //     // Order
-        //     modelBuilder.ApplyConfiguration(new OrderConfiguration());
-        //     modelBuilder.ApplyConfiguration(new OrderImageConfiguration());
-        //     modelBuilder.ApplyConfiguration(new OrderItemConfiguration());
-        //     modelBuilder.ApplyConfiguration(new OrderPaymentConfiguration());
-        //     modelBuilder.ApplyConfiguration(new OrderAddressConfiguration());
-        //     modelBuilder.ApplyConfiguration(new OrderNoteConfiguration());
-        //     modelBuilder.ApplyConfiguration(new OrderStatusHistoryConfiguration());
-
-
-        //     ConfigureGlobalConventions(modelBuilder);
-        // }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

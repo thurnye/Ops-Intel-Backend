@@ -3,7 +3,8 @@ namespace OperationIntelligence.DB;
 public interface IDashboardReadRepository
 {
     Task<DashboardOverviewReadModel> GetOverviewAsync(
-        string range,
+        DateOnly? from,
+        DateOnly? to,
         string site,
         CancellationToken cancellationToken = default);
 }

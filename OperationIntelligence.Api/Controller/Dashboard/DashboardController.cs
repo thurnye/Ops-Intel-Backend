@@ -7,10 +7,10 @@ namespace OperationIntelligence.Api.Controller.Dashboard;
 [Route("api/dashboard")]
 public class DashboardController : BaseApiController
 {
-    private static readonly HashSet<string> AllowedRanges = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "7d", "30d", "90d", "1y"
-    };
+    // private static readonly HashSet<string> AllowedRanges = new(StringComparer.OrdinalIgnoreCase)
+    // {
+    //     "7d", "30d", "90d", "1y"
+    // };
 
     private readonly IDashboardService _dashboardService;
 
@@ -24,23 +24,19 @@ public class DashboardController : BaseApiController
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetOverview(
-        [FromQuery] string range = "30d",
-        [FromQuery] string site = "all",
+        [FromQuery] OverviewFilter filter,
         CancellationToken cancellationToken = default)
     {
-        if (!AllowedRanges.Contains(range))
-        {
-            return ErrorResponse(
-                StatusCodes.Status400BadRequest,
-                ErrorCode.VALIDATION_ERROR,
-                "Invalid dashboard range. Allowed values are: 7d, 30d, 90d, 1y.",
-                nameof(range));
-        }
+
 
         var request = new DashboardFilterRequest
         {
-            Range = range,
-            Site = site
+            Range = new DateRange
+            {
+                From = filter.From,
+                To = filter.To
+            },
+            Site = filter.Site
         };
 
         var result = await _dashboardService.GetOverviewAsync(request, cancellationToken);

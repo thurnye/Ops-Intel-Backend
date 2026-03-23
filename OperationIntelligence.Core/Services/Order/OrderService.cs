@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OperationIntelligence.DB;
+using OrderPaymentStatus = global::PaymentStatus;
 
 namespace OperationIntelligence.Core;
 
@@ -58,7 +59,7 @@ public class OrderService : IOrderService
             CustomerPurchaseOrderNumber = request.CustomerPurchaseOrderNumber,
             Notes = request.Notes,
             Status = OrderStatus.Draft,
-            PaymentStatus = PaymentStatus.Unpaid,
+            PaymentStatus = OrderPaymentStatus.Unpaid,
             IsActive = true,
             CreatedAtUtc = DateTime.UtcNow
         };

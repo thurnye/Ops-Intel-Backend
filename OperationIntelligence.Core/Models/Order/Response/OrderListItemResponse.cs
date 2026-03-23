@@ -1,4 +1,6 @@
-﻿namespace OperationIntelligence.Core;
+﻿using OrderPaymentStatus = global::PaymentStatus;
+
+namespace OperationIntelligence.Core;
 
 public class OrderListItemResponse
 {
@@ -7,7 +9,7 @@ public class OrderListItemResponse
     public string? CustomerName { get; set; }
     public OrderType OrderType { get; set; }
     public OrderStatus Status { get; set; }
-    public PaymentStatus PaymentStatus { get; set; }
+    public OrderPaymentStatus PaymentStatus { get; set; }
     public decimal TotalAmount { get; set; }
     public DateTime OrderDateUtc { get; set; }
 }

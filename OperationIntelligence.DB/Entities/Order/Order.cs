@@ -33,7 +33,7 @@ public class Order : OrderBaseEntity
     public decimal RefundedAmount { get; set; }
     public decimal OutstandingAmount { get; set; }
 
-    public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.Unpaid;
+    public global::PaymentStatus PaymentStatus { get; set; } = global::PaymentStatus.Unpaid;
     public string CurrencyCode { get; set; } = "CAD";
 
     public string? ReferenceNumber { get; set; }

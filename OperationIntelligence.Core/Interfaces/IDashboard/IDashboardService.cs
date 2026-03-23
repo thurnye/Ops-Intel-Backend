@@ -2,7 +2,7 @@ namespace OperationIntelligence.Core;
 
 public interface IDashboardService
 {
-    Task<DashboardOverviewResponse> GetOverviewAsync(
+    Task<DashboardOverviewViewResponse> GetOverviewAsync(
         DashboardFilterRequest request,
         CancellationToken cancellationToken = default);
 }

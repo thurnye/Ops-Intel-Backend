@@ -1,4 +1,5 @@
 ﻿using OperationIntelligence.DB;
+using OrderPaymentStatus = global::PaymentStatus;
 
 namespace OperationIntelligence.Core;
 
@@ -41,7 +42,7 @@ public class OrderPaymentService : IOrderPaymentService
             PaymentMethod = request.PaymentMethod,
             PaymentProvider = request.PaymentProvider,
             TransactionType = PaymentTransactionType.Payment,
-            Status = PaymentStatus.Paid,
+            Status = OrderPaymentStatus.Paid,
             Amount = request.Amount,
             FeeAmount = request.FeeAmount,
             NetAmount = request.Amount - request.FeeAmount,
@@ -107,8 +108,8 @@ public class OrderPaymentService : IOrderPaymentService
         payment.RefundedAmount += request.RefundAmount;
         payment.IsRefunded = payment.RefundedAmount > 0;
         payment.Status = payment.RefundedAmount >= payment.Amount
-            ? PaymentStatus.Refunded
-            : PaymentStatus.PartiallyRefunded;
+            ? OrderPaymentStatus.Refunded
+            : OrderPaymentStatus.PartiallyRefunded;
         payment.UpdatedAtUtc = DateTime.UtcNow;
 
         order.RefundedAmount += request.RefundAmount;
@@ -161,22 +162,22 @@ public class OrderPaymentService : IOrderPaymentService
         }).ToList();
     }
 
-    private static PaymentStatus CalculatePaymentStatus(decimal total, decimal paid, decimal refunded)
+    private static OrderPaymentStatus CalculatePaymentStatus(decimal total, decimal paid, decimal refunded)
     {
         var effectivePaid = paid - refunded;
 
         if (effectivePaid <= 0)
-            return PaymentStatus.Unpaid;
+            return OrderPaymentStatus.Unpaid;
 
         if (refunded > 0 && refunded < paid)
-            return PaymentStatus.PartiallyRefunded;
+            return OrderPaymentStatus.PartiallyRefunded;
 
         if (paid > 0 && refunded >= paid)
-            return PaymentStatus.Refunded;
+            return OrderPaymentStatus.Refunded;
 
         if (effectivePaid < total)
-            return PaymentStatus.PartiallyPaid;
+            return OrderPaymentStatus.PartiallyPaid;
 
-        return PaymentStatus.Paid;
+        return OrderPaymentStatus.Paid;
     }
 }
